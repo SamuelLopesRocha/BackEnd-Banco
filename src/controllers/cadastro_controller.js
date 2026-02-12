@@ -1,5 +1,6 @@
 import { Usuario } from '../models/cadastro_model.js';
 import bcrypt from 'bcryptjs';
+import { Conta } from '../models/conta_model.js';
 
 // 🧠 UTILIDADES
 function validarCPF(cpf) {
@@ -34,6 +35,16 @@ function calcularIdade(data) {
   return idade;
 }
 
+// GERAR NÚMERO DA CONTA
+function gerarNumeroConta() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// GERAR DÍGITO SIMPLES
+function gerarDigito(numero) {
+  const soma = numero.split('').reduce((acc, n) => acc + parseInt(n), 0);
+  return (soma % 10).toString();
+}
 
 // ✅ CREATE
 export const createCadastro = async (req, res) => {
@@ -125,15 +136,32 @@ export const createCadastro = async (req, res) => {
       numero,
       complemento,
       senha: senhaHash,
-      status_conta: 'ATIVA'
+      status_conta: 'ATIVA',
+      email_enviado: false // 🔥 GARANTIDO PARA O RPA
     });
 
-    // ❌ Remover senha da resposta
+    // 🔎 Criar conta corrente automaticamente
+    const numeroConta = gerarNumeroConta();
+    const digito = gerarDigito(numeroConta);
+
+    await Conta.create({
+      usuario_id: novoUsuario.usuario_id,
+      agencia: '0001',
+      numero_conta: numeroConta,
+      digito: digito,
+      tipo_conta: 'CORRENTE',
+      saldo: 0,
+      limite_credito: 200,
+      limite_utilizado: 0,
+      taxa_manutencao: 0,
+      permite_cheque_especial: true
+    });
+
     const usuarioLimpo = novoUsuario.toObject();
     delete usuarioLimpo.senha;
 
     return res.status(201).json({
-      message: 'Usuário cadastrado com sucesso.',
+      message: 'Usuário e conta corrente criados com sucesso.',
       usuario: usuarioLimpo
     });
 
@@ -142,7 +170,6 @@ export const createCadastro = async (req, res) => {
     return res.status(500).json({ error: 'Erro interno ao criar usuário.' });
   }
 };
-
 
 
 // 📋 LIST
@@ -157,7 +184,6 @@ export async function listCadastros(req, res) {
     res.status(500).json({ error: 'Erro ao listar usuários.' });
   }
 }
-
 
 // 🔍 GET BY ID
 export async function getCadastroById(req, res) {
@@ -174,7 +200,6 @@ export async function getCadastroById(req, res) {
     res.status(500).json({ error: 'Erro ao buscar usuário.' });
   }
 }
-
 
 // ✏️ UPDATE
 export async function updateCadastro(req, res) {
@@ -274,7 +299,6 @@ export async function updateCadastro(req, res) {
     res.status(500).json({ error: 'Erro ao atualizar usuário.' });
   }
 }
-
 
 // ❌ DELETE → SOFT DELETE
 export async function deleteCadastro(req, res) {

@@ -79,7 +79,13 @@ const cadastroSchema = new mongoose.Schema({
     type: String,
     enum: ['ATIVA', 'INATIVA', 'BLOQUEADA', 'EXCLUIDA'],
     default: 'ATIVA'
-  }
+  },
+
+  email_enviado: {
+    type: Boolean,
+    default: false
+  },
+
 
 }, {
   timestamps: true,

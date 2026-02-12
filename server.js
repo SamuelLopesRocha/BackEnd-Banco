@@ -10,6 +10,7 @@ import cors from 'cors';
 import { connectDatabase } from './src/config/db.js';
 import cadastroRoutes from "./src/routes/cadastro_route.js";
 import loginRoutes from "./src/routes/login_route.js";
+import contaRoutes from './src/routes/conta_routes.js';
 
 
 
@@ -27,7 +28,7 @@ app.use(express.json());
 // 📌 Rotas
 app.use('/cadastros', cadastroRoutes);
 app.use("/auth", loginRoutes);
-
+app.use('/contas', contaRoutes);
 
 
 // 🧪 Rota teste

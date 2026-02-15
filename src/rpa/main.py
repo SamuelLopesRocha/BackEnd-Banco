@@ -1,3 +1,5 @@
+#cd "/c/Users/Familia Rocha/OneDrive/Anexos de email/Desktop/Projeto Banco/src/rpa"
+
 from db_connection import (
     get_usuarios_pendentes_email,
     marcar_email_usuario_enviado,

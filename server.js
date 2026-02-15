@@ -8,10 +8,10 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { connectDatabase } from './src/config/db.js';
-import cadastroRoutes from "./src/routes/cadastro_route.js";
+import usuarioRoutes from "./src/routes/usuario_route.js";
 import loginRoutes from "./src/routes/login_route.js";
 import contaRoutes from './src/routes/conta_routes.js';
-
+import transacaoRoutes from './src/routes/transacao_routes.js';
 
 
 dotenv.config();
@@ -26,10 +26,10 @@ app.use(cors());
 app.use(express.json());
 
 // 📌 Rotas
-app.use('/cadastros', cadastroRoutes);
+app.use('/usuarios', usuarioRoutes);
 app.use("/auth", loginRoutes);
 app.use('/contas', contaRoutes);
-
+app.use('/transacoes', transacaoRoutes);
 
 // 🧪 Rota teste
 app.get('/', (req, res) => {

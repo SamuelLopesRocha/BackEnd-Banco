@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const cadastroSchema = new mongoose.Schema({
+const usuarioSchema = new mongoose.Schema({
 
   usuario_id: {
     type: Number,
@@ -94,7 +94,7 @@ const cadastroSchema = new mongoose.Schema({
 
 
 // 🔢 GERAR ID SEQUENCIAL — SEM NEXT()
-cadastroSchema.pre('save', async function () {
+usuarioSchema.pre('save', async function () {
   if (this.isNew) {
     const ultimo = await mongoose.model('Usuario')
       .findOne()
@@ -104,4 +104,4 @@ cadastroSchema.pre('save', async function () {
   }
 });
 
-export const Usuario = mongoose.model('Usuario', cadastroSchema);
+export const Usuario = mongoose.model('Usuario', usuarioSchema);

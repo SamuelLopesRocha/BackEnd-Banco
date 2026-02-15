@@ -1,4 +1,4 @@
-import { Usuario } from '../models/cadastro_model.js';
+import { Usuario } from '../models/usuario_model.js';
 import bcrypt from 'bcryptjs';
 import { Conta } from '../models/conta_model.js';
 
@@ -47,7 +47,7 @@ function gerarDigito(numero) {
 }
 
 // ✅ CREATE
-export const createCadastro = async (req, res) => {
+export const createUsuario = async (req, res) => {
   try {
     let {
       nome_completo,
@@ -173,7 +173,7 @@ export const createCadastro = async (req, res) => {
 
 
 // 📋 LIST
-export async function listCadastros(req, res) {
+export async function listUsuarios(req, res) {
   try {
     const usuarios = await Usuario.find({ status_conta: { $ne: 'EXCLUIDA' } })
       .sort({ createdAt: -1 });
@@ -186,7 +186,7 @@ export async function listCadastros(req, res) {
 }
 
 // 🔍 GET BY ID
-export async function getCadastroById(req, res) {
+export async function getUsuarioById(req, res) {
   try {
     const usuario = await Usuario.findOne({ usuario_id: req.params.id });
 
@@ -202,7 +202,7 @@ export async function getCadastroById(req, res) {
 }
 
 // ✏️ UPDATE
-export async function updateCadastro(req, res) {
+export async function updateUsuario(req, res) {
   try {
     const usuarioAntes = await Usuario.findOne({ usuario_id: req.params.id });
 
@@ -301,7 +301,7 @@ export async function updateCadastro(req, res) {
 }
 
 // ❌ DELETE → SOFT DELETE
-export async function deleteCadastro(req, res) {
+export async function deleteUsuario(req, res) {
   try {
     const usuario = await Usuario.findOne({ usuario_id: req.params.id });
 

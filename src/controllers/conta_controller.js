@@ -1,5 +1,5 @@
 import { Conta } from '../models/conta_model.js';
-import { Usuario } from '../models/cadastro_model.js';
+import { Usuario } from '../models/usuario_model.js';
 
 
 // 🔢 UTILIDADES

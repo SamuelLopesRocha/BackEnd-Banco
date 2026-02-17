@@ -1,94 +1,161 @@
-import mongoose from 'mongoose';
+import { CartaoService } from '../services/cartao_service.js';
 
-const cartaoSchema = new mongoose.Schema({
+export class CartaoController {
 
-  id_cartao: {
-    type: Number,
-    unique: true
-  },
+  // =============================
+  // CRIAR CARTÃO
+  // =============================
+  static async criarCartao(req, res) {
+    try {
 
-  conta_id: {
-    type: Number,
-    required: true,
-    index: true
-  },
+      const { conta_id } = req.body;
 
-  numero_cartao: {
-    type: String,
-    required: true,
-    unique: true
-  },
+      const cartao = await CartaoService.criarCartao({
+        contaId: conta_id
+      });
 
-  validade: {
-    type: String,
-    required: true
-  },
+      return res.status(201).json(cartao);
 
-  cvv_hash: {
-    type: String,
-    default: '2032'
-  },
+    } catch (error) {
 
-  tipo: {
-    type: String,
-    enum: ['DEBITO', 'CREDITO', 'MULTIPLO'],
-    default: 'MULTIPLO'
-  },
+      return res.status(400).json({
+        error: error.message
+      });
 
-  bandeira: {
-    type: String,
-    enum: ['VISA', 'MASTERCARD', 'ELO'],
-    default: 'VISA'
-  },
-
-  limite_credito: {
-    type: Number,
-    default: 0
-  },
-
-  limite_utilizado: {
-    type: Number,
-    default: 0
-  },
-
-  status_cartao: {
-    type: String,
-    enum: ['ATIVO', 'BLOQUEADO', 'CANCELADO'],
-    default: 'ATIVO'
-  },
-
-  data_emissao: {
-    type: Date,
-    default: Date.now
-  },
-
-  data_bloqueio: {
-    type: Date,
-    default: null
+    }
   }
 
-}, {
-  timestamps: true,
-  versionKey: false
-});
 
+  // =============================
+  // BUSCAR CARTÃO POR ID
+  // =============================
+  static async buscarCartao(req, res) {
+    try {
 
-// 🔢 GERAR ID SEQUENCIAL
-cartaoSchema.pre('save', async function () {
-  if (this.isNew) {
+      const { id } = req.params;
 
-    const ultimo = await mongoose.model('Cartao')
-      .findOne()
-      .sort({ id_cartao: -1 });
+      const cartao = await CartaoService.buscarCartao(id);
 
-    this.id_cartao = ultimo ? ultimo.id_cartao + 1 : 1;
+      return res.status(200).json(cartao);
+
+    } catch (error) {
+
+      return res.status(404).json({
+        error: error.message
+      });
+
+    }
   }
-});
 
 
-// 📌 ÍNDICES IMPORTANTES
-cartaoSchema.index({ conta_id: 1 });
-cartaoSchema.index({ numero_cartao: 1 });
+  // =============================
+  // LISTAR CARTÕES DA CONTA
+  // =============================
+  static async listarPorConta(req, res) {
+    try {
+
+      const { conta_id } = req.params;
+
+      const cartoes = await CartaoService.listarPorConta(conta_id);
+
+      return res.status(200).json(cartoes);
+
+    } catch (error) {
+
+      return res.status(500).json({
+        error: error.message
+      });
+
+    }
+  }
 
 
-export const Cartao = mongoose.model('Cartao', cartaoSchema);
+  // =============================
+  // BLOQUEAR CARTÃO
+  // =============================
+  static async bloquear(req, res) {
+    try {
+
+      const { id } = req.params;
+
+      const cartao = await CartaoService.bloquearCartao(id);
+
+      return res.status(200).json(cartao);
+
+    } catch (error) {
+
+      return res.status(400).json({
+        error: error.message
+      });
+
+    }
+  }
+
+
+  // =============================
+  // DESBLOQUEAR CARTÃO
+  // =============================
+  static async desbloquear(req, res) {
+    try {
+
+      const { id } = req.params;
+
+      const cartao = await CartaoService.desbloquearCartao(id);
+
+      return res.status(200).json(cartao);
+
+    } catch (error) {
+
+      return res.status(400).json({
+        error: error.message
+      });
+
+    }
+  }
+
+
+  // =============================
+  // ALTERAR LIMITE
+  // =============================
+  static async alterarLimite(req, res) {
+    try {
+
+      const { id } = req.params;
+      const { limite } = req.body;
+
+      const cartao = await CartaoService.alterarLimite(id, limite);
+
+      return res.status(200).json(cartao);
+
+    } catch (error) {
+
+      return res.status(400).json({
+        error: error.message
+      });
+
+    }
+  }
+
+
+  // =============================
+  // CONSULTAR LIMITE
+  // =============================
+  static async consultarLimite(req, res) {
+    try {
+
+      const { id } = req.params;
+
+      const limite = await CartaoService.consultarLimite(id);
+
+      return res.status(200).json(limite);
+
+    } catch (error) {
+
+      return res.status(400).json({
+        error: error.message
+      });
+
+    }
+  }
+
+}

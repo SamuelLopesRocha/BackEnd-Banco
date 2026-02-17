@@ -31,7 +31,7 @@ export async function loginUser(req, res) {
       return res.status(401).json({ error: "Senha inválida." });
     }
 
-    // 🔐 Gerar token JWT
+    // Gerar token JWT
     const token = jwt.sign(
       {
         usuario_id: usuario.usuario_id,

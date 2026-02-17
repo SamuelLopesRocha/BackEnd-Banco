@@ -46,7 +46,7 @@ function gerarDigito(numero) {
   return (soma % 10).toString();
 }
 
-// ✅ CREATE
+// CREATE
 export const createUsuario = async (req, res) => {
   try {
     let {
@@ -172,7 +172,7 @@ export const createUsuario = async (req, res) => {
 };
 
 
-// 📋 LIST
+// LIST
 export async function listUsuarios(req, res) {
   try {
     const usuarios = await Usuario.find({ status_conta: { $ne: 'EXCLUIDA' } })
@@ -185,7 +185,7 @@ export async function listUsuarios(req, res) {
   }
 }
 
-// 🔍 GET BY ID
+// GET BY ID
 export async function getUsuarioById(req, res) {
   try {
     const usuario = await Usuario.findOne({ usuario_id: req.params.id });
@@ -201,7 +201,7 @@ export async function getUsuarioById(req, res) {
   }
 }
 
-// ✏️ UPDATE
+// UPDATE
 export async function updateUsuario(req, res) {
   try {
     const usuarioAntes = await Usuario.findOne({ usuario_id: req.params.id });
@@ -300,7 +300,7 @@ export async function updateUsuario(req, res) {
   }
 }
 
-// ❌ DELETE → SOFT DELETE
+// DELETE → SOFT DELETE
 export async function deleteUsuario(req, res) {
   try {
     const usuario = await Usuario.findOne({ usuario_id: req.params.id });

@@ -2,7 +2,7 @@ import { Conta } from '../models/conta_model.js';
 import { Usuario } from '../models/usuario_model.js';
 
 
-// 🔢 UTILIDADES
+// UTILIDADES
 function gerarNumeroConta() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -13,7 +13,7 @@ function gerarDigito(numero) {
 }
 
 
-// 🟣 POST - Criar Conta Poupança
+// POST - Criar Conta Poupança
 export const criarContaPoupanca = async (req, res) => {
   try {
     const { usuario_id } = req.body;
@@ -22,14 +22,14 @@ export const criarContaPoupanca = async (req, res) => {
       return res.status(400).json({ error: 'usuario_id é obrigatório.' });
     }
 
-    // 🔎 Verifica se usuário existe e está ativo
+    // Verifica se usuário existe e está ativo
     const usuario = await Usuario.findOne({ usuario_id });
 
     if (!usuario || usuario.status_conta !== 'ATIVA') {
       return res.status(404).json({ error: 'Usuário inválido ou inativo.' });
     }
 
-    // 🚫 Verifica duplicidade (extra segurança além do index)
+    // Verifica duplicidade (extra segurança além do index)
     const jaExiste = await Conta.findOne({
       usuario_id,
       tipo_conta: 'POUPANCA'
@@ -70,7 +70,7 @@ export const criarContaPoupanca = async (req, res) => {
 };
 
 
-// 🔵 GET - Listar Contas do Usuário
+// GET - Listar Contas do Usuário
 export const listarContasDoUsuario = async (req, res) => {
   try {
     const { usuario_id } = req.params;

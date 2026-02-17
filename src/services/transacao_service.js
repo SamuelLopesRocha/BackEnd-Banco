@@ -5,7 +5,7 @@ import { Transacao } from '../models/transacao_model.js';
 export class TransacaoService {
 
   // ======================================
-  // 🔹 MÉTODO BASE (NÚCLEO)
+  // MÉTODO BASE (NÚCLEO)
   // ======================================
   static async criarTransacao({
     contaOrigemNumero,
@@ -21,13 +21,13 @@ export class TransacaoService {
 
       session.startTransaction();
 
-      // 🔒 CONVERTER PARA STRING (PADRÃO BANCÁRIO)
+      // CONVERTER PARA STRING (PADRÃO BANCÁRIO)
       const origemNumero = String(contaOrigemNumero);
       const destinoNumero = contaDestinoNumero
         ? String(contaDestinoNumero)
         : null;
 
-      // 🔎 BUSCAR CONTA ORIGEM
+      // BUSCAR CONTA ORIGEM
       const contaOrigem = await Conta.findOne({
         $or: [
           { numero_conta: origemNumero },
@@ -42,7 +42,7 @@ export class TransacaoService {
 
       let contaDestino = null;
 
-      // 🔎 BUSCAR CONTA DESTINO
+      // BUSCAR CONTA DESTINO
       if (destinoNumero) {
 
       contaDestino = await Conta.findOne({
@@ -59,12 +59,12 @@ export class TransacaoService {
 
       }
 
-      // 💰 VALIDAR VALOR
+      // VALIDAR VALOR
       if (!valor || valor <= 0) {
         throw new Error('Valor inválido');
       }
 
-      // 💰 VALIDAR SALDO
+      // VALIDAR SALDO
       if (['PIX', 'TED', 'SAQUE'].includes(tipo)) {
 
         if (contaOrigem.saldo < valor) {
@@ -73,11 +73,11 @@ export class TransacaoService {
 
       }
 
-      // 📊 SALDOS ANTES
+      // SALDOS ANTES
       const saldoAntesOrigem = contaOrigem.saldo;
       const saldoAntesDestino = contaDestino ? contaDestino.saldo : null;
 
-      // 🔄 MOVIMENTAÇÃO
+      // MOVIMENTAÇÃO
       if (['PIX', 'TED'].includes(tipo)) {
 
         contaOrigem.saldo -= valor;
@@ -93,18 +93,18 @@ export class TransacaoService {
         contaOrigem.saldo -= valor;
       }
 
-      // 📊 SALDOS DEPOIS
+      // SALDOS DEPOIS
       const saldoDepoisOrigem = contaOrigem.saldo;
       const saldoDepoisDestino = contaDestino ? contaDestino.saldo : null;
 
-      // 💾 SALVAR CONTAS
+      // SALVAR CONTAS
       await contaOrigem.save({ session });
 
       if (contaDestino) {
         await contaDestino.save({ session });
       }
 
-      // 🧾 REGISTRAR TRANSAÇÃO
+      // REGISTRAR TRANSAÇÃO
       const transacao = new Transacao({
         conta_origem: origemNumero,
         conta_destino: destinoNumero,
@@ -138,7 +138,7 @@ export class TransacaoService {
 
 
   // ======================================
-  // 💸 PIX
+  // PIX
   // ======================================
   static async enviarPix({ contaOrigemNumero, contaDestinoNumero, valor, descricao }) {
 
@@ -154,7 +154,7 @@ export class TransacaoService {
 
 
   // ======================================
-  // 💰 DEPÓSITO
+  // DEPÓSITO
   // ======================================
   static async depositar({ contaDestinoNumero, valor, descricao }) {
 
@@ -169,7 +169,7 @@ export class TransacaoService {
 
 
   // ======================================
-  // 💳 SAQUE
+  // SAQUE
   // ======================================
   static async sacar({ contaOrigemNumero, valor, descricao }) {
 
@@ -184,7 +184,7 @@ export class TransacaoService {
 
 
   // ======================================
-  // 📄 EXTRATO
+  // EXTRATO
   // ======================================
   static async listarPorConta(numeroConta) {
 

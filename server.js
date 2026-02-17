@@ -12,6 +12,9 @@ import usuarioRoutes from "./src/routes/usuario_route.js";
 import loginRoutes from "./src/routes/login_route.js";
 import contaRoutes from './src/routes/conta_routes.js';
 import transacaoRoutes from './src/routes/transacao_routes.js';
+import cartaoRoutes from './src/routes/cartao_route.js';
+import compraCartaoRoutes from './src/routes/compracartao_route.js';
+import faturaRoutes from './src/routes/fatura_route.js';
 
 
 dotenv.config();
@@ -30,6 +33,9 @@ app.use('/usuarios', usuarioRoutes);
 app.use("/auth", loginRoutes);
 app.use('/contas', contaRoutes);
 app.use('/transacoes', transacaoRoutes);
+app.use('/cartoes', cartaoRoutes);
+app.use('/compras-cartao', compraCartaoRoutes);
+app.use('/faturas', faturaRoutes);
 
 // 🧪 Rota teste
 app.get('/', (req, res) => {

@@ -5,8 +5,8 @@ import cors from 'cors';
 export const corsOptions = {
   origin: [
     'http://localhost:3000',        // front local
-    'https://talkfhf.vercel.app'    // domínio hospedado
   ],
+  
   credentials: true, // permite cookies e tokens
   optionsSuccessStatus: 200,
   allowedHeaders: ['Content-Type', 'Authorization'],

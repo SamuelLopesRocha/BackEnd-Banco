@@ -1,6 +1,14 @@
 import { Usuario } from '../models/usuario_model.js';
 import bcrypt from 'bcryptjs';
 import { Conta } from '../models/conta_model.js';
+import { ChavePix } from '../models/chave_pix_model.js'; 
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import path from 'path';
+
+const execAsync = promisify(exec);
+
+
 
 // 🧠 UTILIDADES
 function validarCPF(cpf) {
@@ -160,10 +168,30 @@ export const createUsuario = async (req, res) => {
     const usuarioLimpo = novoUsuario.toObject();
     delete usuarioLimpo.senha;
 
-    return res.status(201).json({
-      message: 'Usuário e conta corrente criados com sucesso.',
-      usuario: usuarioLimpo
-    });
+    try {
+      console.log("Iniciando RPA de envio de e-mail...");
+      
+      const caminhoRPA = path.join(process.cwd(), 'src', 'rpa', 'main.py');
+      
+      // Executa o Python e espera ele terminar
+      const { stdout } = await execAsync(`python  "${caminhoRPA}"`);
+      
+      console.log("RPA finalizado:\n", stdout);
+
+      // RPA enviou o email, avisa o front-end!
+      return res.status(201).json({
+        message: 'Usuário criado com sucesso e e-mail enviado para a sua caixa de entrada!',
+        usuario: usuarioLimpo
+      });
+
+    } catch (erroRpa) {
+      console.error("Erro ao rodar o RPA:", erroRpa);
+      // Se o Python falhar (ex: sem internet), o usuário continua salvo no banco!
+      return res.status(201).json({
+        message: 'Usuário criado com sucesso! O e-mail de confirmação chegará em alguns minutos.',
+        usuario: usuarioLimpo
+      });
+    }
 
   } catch (error) {
     console.error('Erro ao criar usuário:', error);
@@ -323,3 +351,41 @@ export async function deleteUsuario(req, res) {
     res.status(500).json({ error: 'Erro ao excluir usuário.' });
   }
 }
+
+
+export const getMeusDados = async (req, res) => {
+  try {
+    const idDoUsuario = req.user.usuario_id;
+
+    // 1. BUSCA O USUÁRIO
+    const usuario = await Usuario.findOne({ usuario_id: idDoUsuario }).select('-senha');
+
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+
+    // 2. BUSCA A CONTA (Para pegar o saldo)
+    const conta = await Conta.findOne({ usuario_id: idDoUsuario });
+
+    // 3. BUSCA AS CHAVES PIX DO USUÁRIO 🔥
+    const chavesDoUsuario = await ChavePix.find({ usuario_id: idDoUsuario });
+    
+    // Extrai apenas os nomes das chaves para uma lista (ex: ['focas@email.com', '11999999999'])
+    const listaChavesPix = chavesDoUsuario.map(c => c.chave);
+
+    // 4. PREPARA A RESPOSTA
+    const respostaCompleta = {
+      ...usuario.toObject(),
+      saldo_disponivel: conta ? conta.saldo : 0,
+      saldo_poupanca: 0,
+      tipo_conta: conta ? conta.tipo_conta : 'CORRENTE',
+      numero_conta: conta ? conta.numero_conta : null, // Deixamos escondido aqui para o sistema usar depois
+      chaves_pix: listaChavesPix // 🔥 Passando as Chaves Pix para o Front-end!
+    };
+
+    res.status(200).json(respostaCompleta);
+  } catch (error) {
+    console.error("Erro ao buscar dados do usuário logado:", error);
+    res.status(500).json({ error: 'Erro interno no servidor.' });
+  }
+};

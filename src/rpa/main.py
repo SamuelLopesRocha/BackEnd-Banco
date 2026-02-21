@@ -10,7 +10,7 @@ from db_connection import (
 
 from email_service import enviar_email
 
-print("🔍 Buscando usuários pendentes...")
+print("Buscando usuários pendentes...")
 
 # ==============================
 # 👤 CADASTRO
@@ -23,11 +23,11 @@ for usuario in usuarios:
     email = usuario["email"]
     usuario_id = usuario["usuario_id"]
 
-    print(f"📧 Enviando email de cadastro para {nome}")
+    print(f"Enviando email de cadastro para {nome}")
 
     enviar_email(
         destinatario=email,
-        assunto="🎉 Sua conta corrente foi criada!",
+        assunto=" Sua conta corrente foi criada!",
         nome_template="email_boas_vindas.html",
         dados={
             "nome": nome,
@@ -44,7 +44,7 @@ for usuario in usuarios:
 # 💰 POUPANÇA
 # ==============================
 
-print("🔍 Buscando contas poupança pendentes...")
+print("Buscando contas poupança pendentes...")
 
 contas = get_contas_poupanca_pendentes_email()
 
@@ -54,11 +54,11 @@ for conta in contas:
     nome = usuario["nome_completo"]
     email = usuario["email"]
 
-    print(f"📧 Enviando email poupança para {nome}")
+    print(f"Enviando email poupança para {nome}")
 
     enviar_email(
         destinatario=email,
-        assunto="💰 Sua conta poupança foi criada!",
+        assunto="Sua conta poupança foi criada!",
         nome_template="email_conta_poupanca.html",
         dados={
             "nome": nome,
@@ -71,4 +71,4 @@ for conta in contas:
 
     marcar_email_poupanca_enviado(conta["id_conta"])
 
-print("✅ Processo finalizado.")
+print("Processo finalizado.")

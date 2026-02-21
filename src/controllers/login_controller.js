@@ -4,7 +4,9 @@ import jwt from "jsonwebtoken";
 
 export async function loginUser(req, res) {
   try {
-    let { login, senha } = req.body;
+    let { login, email, senha } = req.body;
+
+    login = login || email;
 
     if (!login || !senha) {
       return res.status(400).json({ error: "Login e senha são obrigatórios." });

@@ -86,7 +86,6 @@ const usuarioSchema = new mongoose.Schema({
     default: false
   },
 
-
 }, {
   timestamps: true,
   versionKey: false

@@ -15,6 +15,7 @@ import transacaoRoutes from './src/routes/transacao_routes.js';
 import cartaoRoutes from './src/routes/cartao_route.js';
 import compraCartaoRoutes from './src/routes/compracartao_route.js';
 import faturaRoutes from './src/routes/fatura_route.js';
+import chavePixRoutes from './src/routes/chave_pix_route.js';
 
 
 dotenv.config();
@@ -36,6 +37,7 @@ app.use('/transacoes', transacaoRoutes);
 app.use('/cartoes', cartaoRoutes);
 app.use('/compras-cartao', compraCartaoRoutes);
 app.use('/faturas', faturaRoutes);
+app.use('/chaves-pix', chavePixRoutes);
 
 // 🧪 Rota teste
 app.get('/', (req, res) => {

@@ -1,0 +1,42 @@
+# Dependências (O mais importante, pois é uma pasta gigante)
+node_modules/
+
+# Variáveis de Ambiente e Segredos (NUNCA envie isso pro GitHub)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs de Erros (Gerados automaticamente pelo Node/NPM)
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Pastas de Build/Compilação (Caso use TypeScript futuramente)
+dist/
+build/
+
+# Relatórios de Testes
+coverage/
+.nyc_output/
+
+# Arquivos do Sistema Operacional (Lixo gerado por Mac/Windows)
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Configurações de Editores de Código (VS Code, WebStorm, etc.)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

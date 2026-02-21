@@ -125,8 +125,6 @@ export default class CompraCartaoService {
     }
   }
 
-
-
   // =============================
   // LISTAR POR CARTAO
   // =============================
@@ -137,8 +135,6 @@ export default class CompraCartaoService {
     }).sort({ data_compra: 1 })
 
   }
-
-
 
   // =============================
   // BUSCAR POR ID
@@ -154,8 +150,6 @@ export default class CompraCartaoService {
 
     return compra
   }
-
-
 
   // =============================
   // CANCELAR COMPRA

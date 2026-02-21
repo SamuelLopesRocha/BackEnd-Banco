@@ -10,7 +10,7 @@ from db_connection import (
 
 from email_service import enviar_email
 
-print("Buscando usuários pendentes...")
+print("Buscando usuarios pendentes...")
 
 # ==============================
 # 👤 CADASTRO
@@ -44,7 +44,7 @@ for usuario in usuarios:
 # 💰 POUPANÇA
 # ==============================
 
-print("Buscando contas poupança pendentes...")
+print("Buscando contas poupanca pendentes...")
 
 contas = get_contas_poupanca_pendentes_email()
 

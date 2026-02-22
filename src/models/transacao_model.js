@@ -7,19 +7,19 @@ const transacaoSchema = new mongoose.Schema({
     unique: true
   },
 
+  usuario_id: {
+    type: Number,
+    required: true
+  },
+
   conta_origem: {
     type: String,
     required: true
-},
-
-  conta_destino: {
-    type: String,
-    default: null
-},
+  },
 
   tipo: {
     type: String,
-    enum: ['PIX', 'TED', 'DEPOSITO', 'SAQUE'],
+    enum: ['DEPOSITO', 'SAQUE'],
     required: true
   },
 
@@ -29,7 +29,6 @@ const transacaoSchema = new mongoose.Schema({
     min: 0
   },
 
-  // ORIGEM
   saldo_antes: {
     type: Number,
     required: true
@@ -40,31 +39,15 @@ const transacaoSchema = new mongoose.Schema({
     required: true
   },
 
-  // DESTINO (IMPORTANTE PARA PIX/TED)
-  saldo_antes_destino: {
-    type: Number,
-    default: null
-  },
-
-  saldo_depois_destino: {
-    type: Number,
-    default: null
-  },
-
   descricao: {
     type: String,
     trim: true,
     default: null
   },
 
-  data_transacao: {
-    type: Date,
-    default: Date.now
-  },
-
   status: {
     type: String,
-    enum: ['PENDENTE', 'CONCLUIDA', 'FALHA', 'CANCELADA'],
+    enum: ['CONCLUIDA', 'FALHA'],
     default: 'CONCLUIDA'
   }
 
@@ -85,10 +68,9 @@ transacaoSchema.pre('save', async function () {
   }
 });
 
-
 // ÍNDICES IMPORTANTES
+transacaoSchema.index({ usuario_id: 1 });
 transacaoSchema.index({ conta_origem: 1 });
-transacaoSchema.index({ conta_destino: 1 });
-transacaoSchema.index({ data_transacao: -1 });
+transacaoSchema.index({ createdAt: -1 });
 
 export const Transacao = mongoose.model('Transacao', transacaoSchema);

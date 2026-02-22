@@ -1,33 +1,6 @@
-import { TransacaoService } from '../services/transacao_service.js';
+import { TransacaoService } from '../services/transacao_service.js'
 
 export class TransacaoController {
-
-  // ======================================
-  // PIX
-  // ======================================
-  static async enviarPix(req, res) {
-    try {
-
-      const { conta_origem, conta_destino, valor, descricao } = req.body;
-
-      const transacao = await TransacaoService.enviarPix({
-        contaOrigemNumero: conta_origem,
-        contaDestinoNumero: conta_destino,
-        valor,
-        descricao
-      });
-
-      return res.status(201).json(transacao);
-
-    } catch (error) {
-
-      return res.status(400).json({
-        error: error.message
-      });
-
-    }
-  }
-
 
   // ======================================
   // DEPÓSITO
@@ -35,25 +8,21 @@ export class TransacaoController {
   static async depositar(req, res) {
     try {
 
-      const { conta_destino, valor, descricao } = req.body;
+      const { valor, descricao } = req.body
+      const usuario_id = req.user.usuario_id
 
       const transacao = await TransacaoService.depositar({
-        contaDestinoNumero: conta_destino,
+        usuario_id,
         valor,
         descricao
-      });
+      })
 
-      return res.status(201).json(transacao);
+      return res.status(201).json(transacao)
 
     } catch (error) {
-
-      return res.status(400).json({
-        error: error.message
-      });
-
+      return res.status(400).json({ error: error.message })
     }
   }
-
 
   // ======================================
   // SAQUE
@@ -61,45 +30,41 @@ export class TransacaoController {
   static async sacar(req, res) {
     try {
 
-      const { conta_origem, valor, descricao } = req.body;
+      const { valor, descricao } = req.body
+      const usuario_id = req.user.usuario_id
 
       const transacao = await TransacaoService.sacar({
-        contaOrigemNumero: conta_origem,
+        usuario_id,
         valor,
         descricao
-      });
+      })
 
-      return res.status(201).json(transacao);
+      return res.status(201).json(transacao)
 
     } catch (error) {
-
-      return res.status(400).json({
-        error: error.message
-      });
-
+      return res.status(400).json({ error: error.message })
     }
   }
-
 
   // ======================================
   // EXTRATO
   // ======================================
-  static async listarTransacoesConta(req, res) {
+  static async listarMinhasTransacoes(req, res) {
     try {
 
-      const { id_conta } = req.params;
+      const usuario_id = req.user.usuario_id
+      const { page, limit } = req.query
 
-      const transacoes = await TransacaoService.listarPorConta(id_conta);
+      const resultado = await TransacaoService.listarPorUsuario(
+        usuario_id,
+        page,
+        limit
+      )
 
-      return res.status(200).json(transacoes);
+      return res.status(200).json(resultado)
 
     } catch (error) {
-
-      return res.status(500).json({
-        error: error.message
-      });
-
+      return res.status(500).json({ error: error.message })
     }
   }
-
 }

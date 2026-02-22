@@ -1,7 +1,10 @@
 import express from 'express';
 import { CompraCartaoController } from '../controllers/compracartao_controller.js';
+import { authMiddleware } from '../middlewares/auth_middleware.js';
 
 const router = express.Router();
+
+router.use(authMiddleware);
 
 // Criar compra
 router.post('/', CompraCartaoController.criar);
@@ -12,13 +15,9 @@ router.get('/cartao/:cartao_id', CompraCartaoController.listarPorCartao);
 // Buscar compra por ID
 router.get('/:id', CompraCartaoController.buscarPorId);
 
-// Atualizar compra
-router.put('/:id', CompraCartaoController.atualizar);
-
 // Cancelar compra
-router.patch('/:id/cancelar', CompraCartaoController.cancelar)
+router.put('/cancelar/:id', CompraCartaoController.cancelar);
 
-// Deletar compra
-router.delete('/:id', CompraCartaoController.deletar);
+router.patch('/:id/cancelar', CompraCartaoController.cancelar);
 
 export default router;

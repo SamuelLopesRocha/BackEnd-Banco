@@ -6,9 +6,8 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
-router.post('/pix', TransacaoController.enviarPix);
 router.post('/deposito', TransacaoController.depositar);
 router.post('/saque', TransacaoController.sacar);
-router.get('/:id_conta', TransacaoController.listarTransacoesConta);
+router.get('/', TransacaoController.listarMinhasTransacoes);
 
 export default router;

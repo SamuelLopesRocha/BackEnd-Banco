@@ -34,7 +34,10 @@ export class TransacaoService {
         throw new Error('Descrição muito longa (máx 200 caracteres)')
       }
 
-      const conta = await Conta.findOne({ usuario_id }).session(session)
+      // 🔥 CORREÇÃO AQUI
+      const usuarioIdNumerico = Number(usuario_id)
+
+      const conta = await Conta.findOne({ usuario_id: usuarioIdNumerico }).session(session)
 
       if (!conta) {
         throw new Error('Conta não encontrada')
@@ -47,7 +50,7 @@ export class TransacaoService {
       await conta.save({ session })
 
       const transacao = await Transacao.create([{
-        usuario_id,
+        usuario_id: usuarioIdNumerico,
         conta_origem: conta.numero_conta,
         tipo: 'DEPOSITO',
         valor: valorValidado,
@@ -85,7 +88,10 @@ export class TransacaoService {
         throw new Error('Descrição muito longa (máx 200 caracteres)')
       }
 
-      const conta = await Conta.findOne({ usuario_id }).session(session)
+      // 🔥 CORREÇÃO AQUI TAMBÉM
+      const usuarioIdNumerico = Number(usuario_id)
+
+      const conta = await Conta.findOne({ usuario_id: usuarioIdNumerico }).session(session)
 
       if (!conta) {
         throw new Error('Conta não encontrada')
@@ -102,7 +108,7 @@ export class TransacaoService {
       await conta.save({ session })
 
       const transacao = await Transacao.create([{
-        usuario_id,
+        usuario_id: usuarioIdNumerico,
         conta_origem: conta.numero_conta,
         tipo: 'SAQUE',
         valor: valorValidado,
@@ -129,16 +135,18 @@ export class TransacaoService {
   // ======================================
   static async listarPorUsuario(usuario_id, page = 1, limit = 10) {
 
+    const usuarioIdNumerico = Number(usuario_id)
+
     const pagina = Number(page) > 0 ? Number(page) : 1
     const limite = Number(limit) > 0 && Number(limit) <= 100 ? Number(limit) : 10
     const skip = (pagina - 1) * limite
 
-    const transacoes = await Transacao.find({ usuario_id })
+    const transacoes = await Transacao.find({ usuario_id: usuarioIdNumerico })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limite)
 
-    const total = await Transacao.countDocuments({ usuario_id })
+    const total = await Transacao.countDocuments({ usuario_id: usuarioIdNumerico })
 
     return {
       pagina,

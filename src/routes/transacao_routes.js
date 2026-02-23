@@ -8,6 +8,7 @@ router.use(authMiddleware);
 
 router.post('/deposito', TransacaoController.depositar);
 router.post('/saque', TransacaoController.sacar);
+router.post('/pix', TransacaoController.pix)
 router.get('/', TransacaoController.listarMinhasTransacoes);
 
 export default router;

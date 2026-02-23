@@ -47,6 +47,29 @@ export class TransacaoController {
   }
 
   // ======================================
+  // PIX
+  // ======================================
+  static async pix(req, res) {
+    try {
+
+      const { chave, valor, descricao } = req.body
+      const usuario_id = req.user.usuario_id
+
+      const resultado = await TransacaoService.pix({
+        usuario_id,
+        chave,
+        valor,
+        descricao
+      })
+
+      return res.status(201).json(resultado)
+
+    } catch (error) {
+      return res.status(400).json({ error: error.message })
+    }
+  }
+
+  // ======================================
   // EXTRATO
   // ======================================
   static async listarMinhasTransacoes(req, res) {

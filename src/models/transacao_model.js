@@ -4,7 +4,6 @@ const transacaoSchema = new mongoose.Schema({
 
   id_transacao: {
     type: Number,
-    unique: true
   },
 
   usuario_id: {
@@ -17,9 +16,15 @@ const transacaoSchema = new mongoose.Schema({
     required: true
   },
 
+  // NOVO CAMPO
+  conta_destino: {
+    type: String,
+    default: null
+  },
+
   tipo: {
     type: String,
-    enum: ['DEPOSITO', 'SAQUE'],
+    enum: ['DEPOSITO', 'SAQUE', 'PIX_ENVIO', 'PIX_RECEBIMENTO'],
     required: true
   },
 
@@ -42,6 +47,19 @@ const transacaoSchema = new mongoose.Schema({
   descricao: {
     type: String,
     trim: true,
+    default: null
+  },
+
+  // NOVO
+  chave_pix: {
+    type: String,
+    default: null
+  },
+
+  // NOVO
+  tipo_chave_pix: {
+    type: String,
+    enum: ['CPF', 'EMAIL', 'TELEFONE', 'ALEATORIA', null],
     default: null
   },
 
@@ -68,9 +86,11 @@ transacaoSchema.pre('save', async function () {
   }
 });
 
+
 // ÍNDICES IMPORTANTES
 transacaoSchema.index({ usuario_id: 1 });
 transacaoSchema.index({ conta_origem: 1 });
+transacaoSchema.index({ conta_destino: 1 }); // NOVO
 transacaoSchema.index({ createdAt: -1 });
 
 export const Transacao = mongoose.model('Transacao', transacaoSchema);

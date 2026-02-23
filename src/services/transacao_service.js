@@ -1,11 +1,12 @@
 import mongoose from 'mongoose'
 import { Conta } from '../models/conta_model.js'
 import { Transacao } from '../models/transacao_model.js'
+import { ChavePix } from '../models/chave_pix_model.js'
 
 export class TransacaoService {
 
   // ======================================
-  // FUNÇÃO AUXILIAR PARA VALIDAR VALOR
+  // VALIDAR VALOR
   // ======================================
   static validarValor(valor) {
     const valorNumerico = Number(valor)
@@ -14,7 +15,6 @@ export class TransacaoService {
       throw new Error('Valor inválido')
     }
 
-    // Arredonda para 2 casas decimais
     return Math.round(valorNumerico * 100) / 100
   }
 
@@ -34,7 +34,6 @@ export class TransacaoService {
         throw new Error('Descrição muito longa (máx 200 caracteres)')
       }
 
-      // 🔥 CORREÇÃO AQUI
       const usuarioIdNumerico = Number(usuario_id)
 
       const conta = await Conta.findOne({ usuario_id: usuarioIdNumerico }).session(session)
@@ -88,7 +87,6 @@ export class TransacaoService {
         throw new Error('Descrição muito longa (máx 200 caracteres)')
       }
 
-      // 🔥 CORREÇÃO AQUI TAMBÉM
       const usuarioIdNumerico = Number(usuario_id)
 
       const conta = await Conta.findOne({ usuario_id: usuarioIdNumerico }).session(session)
@@ -131,7 +129,107 @@ export class TransacaoService {
   }
 
   // ======================================
-  // EXTRATO (COM PAGINAÇÃO)
+  // PIX
+  // ======================================
+  static async pix({ usuario_id, chave, valor, descricao }) {
+
+    const session = await mongoose.startSession()
+
+    try {
+      session.startTransaction()
+
+      const valorValidado = this.validarValor(valor)
+      const usuarioIdNumerico = Number(usuario_id)
+
+      // Conta origem
+      const contaOrigem = await Conta.findOne({ usuario_id: usuarioIdNumerico }).session(session)
+
+      if (!contaOrigem) {
+        throw new Error('Conta origem não encontrada')
+      }
+
+      if (contaOrigem.saldo < valorValidado) {
+        throw new Error('Saldo insuficiente')
+      }
+
+      // Buscar chave PIX
+      const chavePix = await ChavePix.findOne({ chave })
+
+      if (!chavePix) {
+        throw new Error('Chave Pix não encontrada')
+      }
+
+      // Conta destino
+      const contaDestino = await Conta.findOne({
+        numero_conta: chavePix.numero_conta
+      }).session(session)
+
+      if (!contaDestino) {
+        throw new Error('Conta destino não encontrada')
+      }
+
+      if (contaDestino.numero_conta === contaOrigem.numero_conta) {
+        throw new Error('Não é possível enviar Pix para a própria conta')
+      }
+
+      // ===== DEBITAR ORIGEM =====
+      const saldoAntesOrigem = contaOrigem.saldo
+      contaOrigem.saldo = Math.round((contaOrigem.saldo - valorValidado) * 100) / 100
+      const saldoDepoisOrigem = contaOrigem.saldo
+
+      await contaOrigem.save({ session })
+
+      // ===== CREDITAR DESTINO =====
+      const saldoAntesDestino = contaDestino.saldo
+      contaDestino.saldo = Math.round((contaDestino.saldo + valorValidado) * 100) / 100
+      const saldoDepoisDestino = contaDestino.saldo
+
+      await contaDestino.save({ session })
+
+      // ===== TRANSAÇÃO ENVIO =====
+      await Transacao.create([{
+        usuario_id: usuarioIdNumerico,
+        conta_origem: contaOrigem.numero_conta,
+        conta_destino: contaDestino.numero_conta,
+        tipo: 'PIX_ENVIO',
+        valor: valorValidado,
+        saldo_antes: saldoAntesOrigem,
+        saldo_depois: saldoDepoisOrigem,
+        descricao,
+        chave_pix: chave,
+        tipo_chave_pix: chavePix.tipo_chave,
+        status: 'CONCLUIDA'
+      }], { session })
+
+      // ===== TRANSAÇÃO RECEBIMENTO =====
+      await Transacao.create([{
+        usuario_id: contaDestino.usuario_id,
+        conta_origem: contaOrigem.numero_conta,
+        conta_destino: contaDestino.numero_conta,
+        tipo: 'PIX_RECEBIMENTO',
+        valor: valorValidado,
+        saldo_antes: saldoAntesDestino,
+        saldo_depois: saldoDepoisDestino,
+        descricao,
+        chave_pix: chave,
+        tipo_chave_pix: chavePix.tipo_chave,
+        status: 'CONCLUIDA'
+      }], { session })
+
+      await session.commitTransaction()
+
+      return { message: 'Pix realizado com sucesso' }
+
+    } catch (error) {
+      await session.abortTransaction()
+      throw error
+    } finally {
+      session.endSession()
+    }
+  }
+
+  // ======================================
+  // EXTRATO
   // ======================================
   static async listarPorUsuario(usuario_id, page = 1, limit = 10) {
 

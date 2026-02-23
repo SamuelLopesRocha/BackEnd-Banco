@@ -158,4 +158,26 @@ export class CartaoController {
     }
   }
 
+
+  // =============================
+  // 🗑️ DELETAR CARTÃO
+  // =============================
+  static async deletarCartao(req, res) {
+    try {
+
+      const { id } = req.params;
+
+      const resultado = await CartaoService.deletarCartao(id);
+
+      return res.status(200).json(resultado);
+
+    } catch (error) {
+
+      return res.status(404).json({
+        error: error.message
+      });
+
+    }
+  }
+
 }

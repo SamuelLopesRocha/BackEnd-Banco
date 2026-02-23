@@ -176,4 +176,27 @@ export class CartaoService {
     };
   }
 
+
+  // ==============================
+  // 🗑️ DELETAR CARTÃO
+  // ==============================
+  static async deletarCartao(id) {
+
+    const cartao = await Cartao.findOne({
+      id_cartao: id
+    });
+
+    if (!cartao) {
+      throw new Error('Cartão não encontrado');
+    }
+
+    await Cartao.deleteOne({
+      id_cartao: id
+    });
+
+    return {
+      mensagem: 'Cartão deletado com sucesso'
+    };
+  }
+
 }

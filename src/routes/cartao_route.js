@@ -17,4 +17,6 @@ router.patch('/:id/limite', CartaoController.alterarLimite);
 
 router.get('/:id/limite', CartaoController.consultarLimite);
 
+router.delete('/:id', CartaoController.deletarCartao); 
+
 export default router;

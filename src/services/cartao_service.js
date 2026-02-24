@@ -3,72 +3,37 @@ import { Conta } from '../models/conta_model.js';
 
 export class CartaoService {
 
-  // ==============================
-  // 🔢 GERAR NÚMERO CARTÃO 16 DIGITOS
-  // ==============================
-  static gerarNumeroCartao() {
+  // ======================================
+  // CRIAR CARTÃO PARA USUÁRIO LOGADO
+  // ======================================
+  static async criarCartao(usuario_id) {
 
-    let numero = '';
-
-    for (let i = 0; i < 16; i++) {
-      numero += Math.floor(Math.random() * 10);
-    }
-
-    return numero;
-  }
-
-
-  // ==============================
-  // 🔐 GERAR CVV 3 DIGITOS
-  // ==============================
-  static gerarCVV() {
-
-    return Math.floor(100 + Math.random() * 900).toString();
-
-  }
-
-
-  // ==============================
-  // 💳 CRIAR CARTÃO
-  // ==============================
-  static async criarCartao({ contaId }) {
-
-    const conta = await Conta.findOne({
-      id_conta: contaId
-    });
+    const conta = await Conta.findOne({ usuario_id });
 
     if (!conta) {
-      throw new Error('Conta não encontrada');
+      throw new Error('Conta não encontrada para o usuário');
     }
-
-    const numeroCartao = this.gerarNumeroCartao();
-    const cvv = this.gerarCVV();
 
     const cartao = await Cartao.create({
-
-      conta_id: contaId,
-      numero_cartao: numeroCartao,
-      validade: '12/32',
-      cvv_hash: cvv,
+      usuario_id,
+      conta_id: conta.numero_conta,
       tipo: 'MULTIPLO',
       bandeira: 'VISA',
-      limite_credito: 1000,
-      limite_utilizado: 0
-
+      status_cartao: 'ATIVO',
+      limite_total: 1000,
+      limite_usado: 0
     });
 
     return cartao;
   }
 
 
-  // ==============================
-  // 🔍 BUSCAR CARTÃO POR ID
-  // ==============================
+  // ======================================
+  // BUSCAR CARTÃO POR ID
+  // ======================================
   static async buscarCartao(id) {
 
-    const cartao = await Cartao.findOne({
-      id_cartao: id
-    });
+    const cartao = await Cartao.findById(id);
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
@@ -78,29 +43,29 @@ export class CartaoService {
   }
 
 
-  // ==============================
-  // 📄 LISTAR POR CONTA
-  // ==============================
-  static async listarPorConta(contaId) {
+  // ======================================
+  // LISTAR CARTÕES DO USUÁRIO
+  // ======================================
+  static async listarMeusCartoes(usuario_id) {
 
-    return Cartao.find({
-      conta_id: contaId
-    });
+    return await Cartao.find({ usuario_id });
 
   }
 
 
-  // ==============================
-  // 🔒 BLOQUEAR
-  // ==============================
+  // ======================================
+  // BLOQUEAR CARTÃO
+  // ======================================
   static async bloquearCartao(id) {
 
-    const cartao = await Cartao.findOne({
-      id_cartao: id
-    });
+    const cartao = await Cartao.findById(id);
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
+    }
+
+    if (cartao.status_cartao === 'BLOQUEADO') {
+      throw new Error('Cartão já está bloqueado');
     }
 
     cartao.status_cartao = 'BLOQUEADO';
@@ -112,17 +77,19 @@ export class CartaoService {
   }
 
 
-  // ==============================
-  // 🔓 DESBLOQUEAR
-  // ==============================
+  // ======================================
+  // DESBLOQUEAR CARTÃO
+  // ======================================
   static async desbloquearCartao(id) {
 
-    const cartao = await Cartao.findOne({
-      id_cartao: id
-    });
+    const cartao = await Cartao.findById(id);
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
+    }
+
+    if (cartao.status_cartao === 'ATIVO') {
+      throw new Error('Cartão já está ativo');
     }
 
     cartao.status_cartao = 'ATIVO';
@@ -134,65 +101,64 @@ export class CartaoService {
   }
 
 
-  // ==============================
-  // 💰 ALTERAR LIMITE
-  // ==============================
+  // ======================================
+  // ALTERAR LIMITE
+  // ======================================
   static async alterarLimite(id, novoLimite) {
 
-    const cartao = await Cartao.findOne({
-      id_cartao: id
-    });
+    const cartao = await Cartao.findById(id);
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
     }
 
-    cartao.limite_credito = novoLimite;
+    const limite = Number(novoLimite);
+
+    if (!Number.isFinite(limite) || limite <= 0) {
+      throw new Error('Novo Limite inválido');
+    }
+
+    if (limite < cartao.limite_usado) {
+      throw new Error('Novo limite não pode ser menor que o limite já utilizado');
+    }
+
+    cartao.limite_total = limite;
 
     await cartao.save();
-
     return cartao;
-  }
+    }
 
-
-  // ==============================
-  // 📊 CONSULTAR LIMITE
-  // ==============================
+  // ======================================
+  // CONSULTAR LIMITE
+  // ======================================
   static async consultarLimite(id) {
 
-    const cartao = await Cartao.findOne({
-      id_cartao: id
-    });
+    const cartao = await Cartao.findById(id);
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
     }
 
     return {
-      limite_total: cartao.limite_credito,
-      limite_utilizado: cartao.limite_utilizado,
-      limite_disponivel:
-        cartao.limite_credito - cartao.limite_utilizado
+      limite_total: cartao.limite_total,
+      limite_usado: cartao.limite_usado,
+      limite_disponivel: cartao.limite_total - cartao.limite_usado
     };
   }
 
 
-  // ==============================
-  // 🗑️ DELETAR CARTÃO
-  // ==============================
+  // ======================================
+  // DELETAR CARTÃO
+  // ======================================
   static async deletarCartao(id) {
 
-    const cartao = await Cartao.findOne({
-      id_cartao: id
-    });
+    const cartao = await Cartao.findById(id);
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
     }
 
-    await Cartao.deleteOne({
-      id_cartao: id
-    });
+    await Cartao.deleteOne({ _id: id });
 
     return {
       mensagem: 'Cartão deletado com sucesso'

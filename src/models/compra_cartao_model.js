@@ -13,28 +13,18 @@ const compraCartaoSchema = new Schema({
   // 🔗 RELACIONAMENTO COM CARTAO
   cartao_id: {
     type: Schema.Types.ObjectId,
-    ref: 'Cartao',
     required: true,
     index: true
   },
 
-  // 🔗 RELACIONAMENTO COM CONTA
-  conta_id: {
-    type: Schema.Types.ObjectId,
-    ref: 'Conta',
-    required: true,
-    index: true
-  },
-
-  // 💰 VALORES FINANCEIROS SEGUROS
+  // 💰 VALORES FINANCEIROS
   valor_total: {
     type: Schema.Types.Decimal128,
     required: true
   },
 
   valor_parcela: {
-    type: Schema.Types.Decimal128,
-    required: true
+    type: Schema.Types.Decimal128
   },
 
   quantidade_parcelas: {
@@ -68,7 +58,7 @@ const compraCartaoSchema = new Schema({
     index: true
   },
 
-  // 🔗 RELACIONAMENTO COM FATURA
+  // 🔗 RELACIONAMENTO COM FATURA (futuro)
   fatura_id: {
     type: Schema.Types.ObjectId,
     ref: 'Fatura',
@@ -92,12 +82,12 @@ const compraCartaoSchema = new Schema({
 });
 
 
-// 🔢 ID SEQUENCIAL (simples - depois podemos evoluir para Counter)
+// 🔢 ID SEQUENCIAL
 compraCartaoSchema.pre('save', async function (next) {
 
   if (this.isNew) {
 
-    const ultima = await mongoose.model('CompraCartao')
+    const ultima = await this.constructor
       .findOne()
       .sort({ id_compra: -1 })
       .lean();
@@ -109,7 +99,7 @@ compraCartaoSchema.pre('save', async function (next) {
 });
 
 
-// 🔐 GERA CODIGO_AUTORIZACAO AUTOMATICAMENTE
+// 🔐 CODIGO AUTORIZAÇÃO
 compraCartaoSchema.pre('validate', function (next) {
 
   if (!this.codigo_autorizacao) {
@@ -120,7 +110,7 @@ compraCartaoSchema.pre('validate', function (next) {
 });
 
 
-// 💰 CALCULAR VALOR DA PARCELA COM PRECISÃO
+// 💰 CALCULAR PARCELA
 compraCartaoSchema.pre('validate', function (next) {
 
   if (this.valor_total && this.quantidade_parcelas > 0) {
@@ -137,9 +127,7 @@ compraCartaoSchema.pre('validate', function (next) {
 });
 
 
-// 📈 INDEX COMPOSTO
-compraCartaoSchema.index({ conta_id: 1, cartao_id: 1 });
-compraCartaoSchema.index({ conta_id: 1, status_compra: 1 });
-
-
-export const CompraCartao = mongoose.model('CompraCartao', compraCartaoSchema);
+export const CompraCartao = mongoose.model(
+  'CompraCartao',
+  compraCartaoSchema
+);

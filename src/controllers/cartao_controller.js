@@ -8,20 +8,36 @@ export class CartaoController {
   static async criarCartao(req, res) {
     try {
 
-      const { conta_id } = req.body;
+      const usuario_id = req.user.usuario_id;
 
-      const cartao = await CartaoService.criarCartao({
-        contaId: conta_id
-      });
+      const cartao = await CartaoService.criarCartao(usuario_id);
 
       return res.status(201).json(cartao);
 
     } catch (error) {
-
       return res.status(400).json({
         error: error.message
       });
+    }
+  }
 
+
+  // =============================
+  // LISTAR MEUS CARTÕES
+  // =============================
+  static async listarMeusCartoes(req, res) {
+    try {
+
+      const usuario_id = req.user.usuario_id;
+
+      const cartoes = await CartaoService.listarMeusCartoes(usuario_id);
+
+      return res.status(200).json(cartoes);
+
+    } catch (error) {
+      return res.status(500).json({
+        error: error.message
+      });
     }
   }
 
@@ -39,33 +55,9 @@ export class CartaoController {
       return res.status(200).json(cartao);
 
     } catch (error) {
-
       return res.status(404).json({
         error: error.message
       });
-
-    }
-  }
-
-
-  // =============================
-  // LISTAR CARTÕES DA CONTA
-  // =============================
-  static async listarPorConta(req, res) {
-    try {
-
-      const { conta_id } = req.params;
-
-      const cartoes = await CartaoService.listarPorConta(conta_id);
-
-      return res.status(200).json(cartoes);
-
-    } catch (error) {
-
-      return res.status(500).json({
-        error: error.message
-      });
-
     }
   }
 
@@ -83,11 +75,9 @@ export class CartaoController {
       return res.status(200).json(cartao);
 
     } catch (error) {
-
       return res.status(400).json({
         error: error.message
       });
-
     }
   }
 
@@ -105,11 +95,9 @@ export class CartaoController {
       return res.status(200).json(cartao);
 
     } catch (error) {
-
       return res.status(400).json({
         error: error.message
       });
-
     }
   }
 
@@ -121,18 +109,20 @@ export class CartaoController {
     try {
 
       const { id } = req.params;
-      const { limite } = req.body;
+      const { novoLimite } = req.body;
 
-      const cartao = await CartaoService.alterarLimite(id, limite);
-
+      const cartao = await CartaoService.alterarLimite(
+        id,
+        novoLimite
+      );
+      
       return res.status(200).json(cartao);
 
     } catch (error) {
-
+      
       return res.status(400).json({
         error: error.message
       });
-
     }
   }
 
@@ -150,17 +140,15 @@ export class CartaoController {
       return res.status(200).json(limite);
 
     } catch (error) {
-
       return res.status(400).json({
         error: error.message
       });
-
     }
   }
 
 
   // =============================
-  // 🗑️ DELETAR CARTÃO
+  // DELETAR CARTÃO
   // =============================
   static async deletarCartao(req, res) {
     try {
@@ -172,11 +160,9 @@ export class CartaoController {
       return res.status(200).json(resultado);
 
     } catch (error) {
-
       return res.status(404).json({
         error: error.message
       });
-
     }
   }
 

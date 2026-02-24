@@ -1,22 +1,24 @@
 import express from 'express';
 import { CartaoController } from '../controllers/cartao_controller.js';
+import { authMiddleware } from '../middlewares/auth_middleware.js';
 
 const router = express.Router();
 
-router.post('/', CartaoController.criarCartao);
+// 🔐 TODAS PROTEGIDAS
+router.post('/', authMiddleware, CartaoController.criarCartao);
 
-router.get('/:id', CartaoController.buscarCartao);
+router.get('/meus', authMiddleware, CartaoController.listarMeusCartoes);
 
-router.get('/conta/:conta_id', CartaoController.listarPorConta);
+router.get('/:id', authMiddleware, CartaoController.buscarCartao);
 
-router.patch('/:id/bloquear', CartaoController.bloquear);
+router.patch('/:id/bloquear', authMiddleware, CartaoController.bloquear);
 
-router.patch('/:id/desbloquear', CartaoController.desbloquear);
+router.patch('/:id/desbloquear', authMiddleware, CartaoController.desbloquear);
 
-router.patch('/:id/limite', CartaoController.alterarLimite);
+router.patch('/:id/limite', authMiddleware, CartaoController.alterarLimite);
 
-router.get('/:id/limite', CartaoController.consultarLimite);
+router.get('/:id/limite', authMiddleware, CartaoController.consultarLimite);
 
-router.delete('/:id', CartaoController.deletarCartao); 
+router.delete('/:id', authMiddleware, CartaoController.deletarCartao);
 
 export default router;

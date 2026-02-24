@@ -13,7 +13,7 @@ import loginRoutes from "./src/routes/login_route.js";
 import contaRoutes from './src/routes/conta_routes.js';
 import transacaoRoutes from './src/routes/transacao_routes.js';
 import cartaoRoutes from './src/routes/cartao_route.js';
-import compraCartaoRoutes from './src/routes/compracartao_route.js';
+import compraCartaoRoutes from './src/routes/compra_cartao_route.js';
 import faturaRoutes from './src/routes/fatura_route.js';
 import chavePixRoutes from './src/routes/chave_pix_route.js';
 

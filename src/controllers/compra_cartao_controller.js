@@ -5,13 +5,14 @@ export class CompraCartaoController {
   // ======================================
   // REALIZAR COMPRA
   // ======================================
-  static async realizarCompra(req, res) {
+  static async realizarCompra(req, res, next) {
     try {
 
       const usuario_id = req.user.usuario_id
 
       const {
-        cartao_id,
+        numero_cartao,
+        cvv,
         valor_total,
         quantidade_parcelas,
         descricao
@@ -19,7 +20,8 @@ export class CompraCartaoController {
 
       const compra = await CompraCartaoService.realizarCompra({
         usuario_id,
-        cartao_id,
+        numero_cartao,
+        cvv,
         valor_total,
         quantidade_parcelas,
         descricao
@@ -28,7 +30,7 @@ export class CompraCartaoController {
       return res.status(201).json(compra)
 
     } catch (error) {
-      return res.status(400).json({ error: error.message })
+      next(error)
     }
   }
 
@@ -36,44 +38,38 @@ export class CompraCartaoController {
   // ======================================
   // LISTAR MINHAS COMPRAS
   // ======================================
-  static async listarMinhasCompras(req, res) {
+  static async listarMinhasCompras(req, res, next) {
     try {
 
       const usuario_id = req.user.usuario_id
-      const { page, limit } = req.query
 
-      const resultado = await CompraCartaoService.listarComprasUsuario(
-        usuario_id,
-        page,
-        limit
-      )
+      const compras =
+        await CompraCartaoService.listarComprasUsuario(usuario_id)
 
-      return res.status(200).json(resultado)
+      return res.status(200).json(compras)
 
     } catch (error) {
-      return res.status(500).json({ error: error.message })
+      next(error)
     }
   }
 
 
   // ======================================
-  // BUSCAR COMPRA POR ID
+  // BUSCAR POR ID
   // ======================================
-  static async buscarPorId(req, res) {
+  static async buscarPorId(req, res, next) {
     try {
 
       const usuario_id = req.user.usuario_id
-      const { id } = req.params
+      const id = Number(req.params.id)   // ✅ CONVERSÃO IMPORTANTE
 
-      const compra = await CompraCartaoService.buscarCompraPorId(
-        usuario_id,
-        id
-      )
+      const compra =
+        await CompraCartaoService.buscarCompraPorId(usuario_id, id)
 
       return res.status(200).json(compra)
 
     } catch (error) {
-      return res.status(404).json({ error: error.message })
+      next(error)
     }
   }
 
@@ -81,21 +77,19 @@ export class CompraCartaoController {
   // ======================================
   // CANCELAR COMPRA
   // ======================================
-  static async cancelarCompra(req, res) {
+  static async cancelarCompra(req, res, next) {
     try {
 
       const usuario_id = req.user.usuario_id
-      const { id } = req.params
+      const id = Number(req.params.id)   // ✅ CONVERSÃO IMPORTANTE
 
-      const compra = await CompraCartaoService.cancelarCompra(
-        usuario_id,
-        id
-      )
+      const compra =
+        await CompraCartaoService.cancelarCompra(usuario_id, id)
 
       return res.status(200).json(compra)
 
     } catch (error) {
-      return res.status(400).json({ error: error.message })
+      next(error)
     }
   }
 

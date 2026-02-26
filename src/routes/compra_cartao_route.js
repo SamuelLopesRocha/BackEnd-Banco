@@ -4,8 +4,10 @@ import { authMiddleware } from '../middlewares/auth_middleware.js'
 
 const router = express.Router()
 
+// middleware de autenticação
 router.use(authMiddleware)
 
+// rotas
 router.post('/', CompraCartaoController.realizarCompra)
 router.get('/', CompraCartaoController.listarMinhasCompras)
 router.get('/:id', CompraCartaoController.buscarPorId)

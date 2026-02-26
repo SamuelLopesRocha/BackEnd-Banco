@@ -20,7 +20,7 @@ export class CompraCartaoService {
 
 
   // ======================================
-  // REALIZAR COMPRA (PROFISSIONAL)
+  // REALIZAR COMPRA
   // ======================================
   static async realizarCompra({
     usuario_id,
@@ -53,31 +53,19 @@ export class CompraCartaoService {
       // BUSCAR CARTÃO
       // ============================
       const cartao = await Cartao.findOne({
-        numero_cartao
+        numero_cartao,
+        usuario_id: Number(usuario_id)
       }).session(session)
 
       if (!cartao) {
         throw new Error('Cartão não encontrado')
       }
 
-      // ============================
-      // VALIDAR DONO
-      // ============================
-      if (cartao.usuario_id !== Number(usuario_id)) {
-        throw new Error('Cartão não pertence ao usuário')
-      }
-
-      // ============================
-      // VALIDAR STATUS
-      // ============================
       if (cartao.status_cartao !== 'ATIVO') {
         throw new Error('Cartão não está ativo')
       }
 
-      // ============================
-      // VALIDAR CVV
-      // ============================
-      if (cartao.cvv !== cvv) {
+      if (String(cartao.cvv) !== String(cvv)) {
         throw new Error('CVV inválido')
       }
 
@@ -85,7 +73,8 @@ export class CompraCartaoService {
       // VALIDAR LIMITE
       // ============================
       const limiteDisponivel =
-        cartao.limite_credito - cartao.limite_utilizado
+        Number(cartao.limite_credito) -
+        Number(cartao.limite_utilizado)
 
       if (valor > limiteDisponivel) {
         throw new Error('Limite insuficiente')
@@ -94,30 +83,33 @@ export class CompraCartaoService {
       // ============================
       // ATUALIZAR LIMITE
       // ============================
-      cartao.limite_utilizado += valor
+      cartao.limite_utilizado =
+        Number(cartao.limite_utilizado) + valor
+
       await cartao.save({ session })
 
       // ============================
       // CRIAR COMPRA
       // ============================
-      const compra = await CompraCartao.create([{
+      const compraCriada = await CompraCartao.create([{
 
         usuario_id: Number(usuario_id),
         cartao_id: cartao._id,
 
-        valor_total: mongoose.Types.Decimal128.fromString(
-          valor.toFixed(2)
-        ),
+        valor_total:
+          mongoose.Types.Decimal128.fromString(
+            valor.toFixed(2)
+          ),
 
         quantidade_parcelas: parcelas,
-        descricao
+        descricao,
+        status_compra: 'ATIVA'
 
       }], { session })
 
-
       await session.commitTransaction()
 
-      return compra[0]
+      return compraCriada[0]
 
     } catch (error) {
 
@@ -133,7 +125,7 @@ export class CompraCartaoService {
 
 
   // ======================================
-  // LISTAR COMPRAS DO USUARIO
+  // LISTAR COMPRAS
   // ======================================
   static async listarComprasUsuario(usuario_id) {
 
@@ -145,12 +137,12 @@ export class CompraCartaoService {
 
 
   // ======================================
-  // BUSCAR COMPRA POR ID
+  // BUSCAR POR ID (CORRIGIDO)
   // ======================================
-  static async buscarCompraPorId(usuario_id, id) {
+  static async buscarCompraPorId(usuario_id, id_compra) {
 
     const compra = await CompraCartao.findOne({
-      _id: id,
+      id_compra: Number(id_compra),
       usuario_id: Number(usuario_id)
     })
 
@@ -163,9 +155,9 @@ export class CompraCartaoService {
 
 
   // ======================================
-  // CANCELAR COMPRA
+  // CANCELAR COMPRA (CORRIGIDO)
   // ======================================
-  static async cancelarCompra(usuario_id, id) {
+  static async cancelarCompra(usuario_id, id_compra) {
 
     const session = await mongoose.startSession()
 
@@ -174,7 +166,7 @@ export class CompraCartaoService {
       session.startTransaction()
 
       const compra = await CompraCartao.findOne({
-        _id: id,
+        id_compra: Number(id_compra),
         usuario_id: Number(usuario_id)
       }).session(session)
 
@@ -198,8 +190,11 @@ export class CompraCartaoService {
         compra.valor_total.toString()
       )
 
+      // ============================
       // ESTORNAR LIMITE
-      cartao.limite_utilizado -= valor
+      // ============================
+      cartao.limite_utilizado =
+        Number(cartao.limite_utilizado) - valor
 
       if (cartao.limite_utilizado < 0) {
         cartao.limite_utilizado = 0

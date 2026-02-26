@@ -10,6 +10,12 @@ const compraCartaoSchema = new Schema({
     index: true
   },
 
+  usuario_id: {
+    type: Number,
+    required: true,
+    index: true
+  },
+
   // 🔗 RELACIONAMENTO COM CARTAO
   cartao_id: {
     type: Schema.Types.ObjectId,
@@ -58,7 +64,6 @@ const compraCartaoSchema = new Schema({
     index: true
   },
 
-  // 🔗 RELACIONAMENTO COM FATURA (futuro)
   fatura_id: {
     type: Schema.Types.ObjectId,
     ref: 'Fatura',
@@ -70,7 +75,6 @@ const compraCartaoSchema = new Schema({
     default: false
   },
 
-  // 🔐 GERADO AUTOMATICAMENTE
   codigo_autorizacao: {
     type: String,
     unique: true
@@ -82,8 +86,8 @@ const compraCartaoSchema = new Schema({
 });
 
 
-// 🔢 ID SEQUENCIAL
-compraCartaoSchema.pre('save', async function (next) {
+// 🔢 ID SEQUENCIAL (SEM next)
+compraCartaoSchema.pre('save', async function () {
 
   if (this.isNew) {
 
@@ -95,35 +99,37 @@ compraCartaoSchema.pre('save', async function (next) {
     this.id_compra = ultima ? ultima.id_compra + 1 : 1;
   }
 
-  next();
 });
 
 
-// 🔐 CODIGO AUTORIZAÇÃO
-compraCartaoSchema.pre('validate', function (next) {
+// 🔐 CODIGO AUTORIZAÇÃO (SEM next)
+compraCartaoSchema.pre('validate', function () {
 
   if (!this.codigo_autorizacao) {
-    this.codigo_autorizacao = new mongoose.Types.ObjectId().toString();
+    this.codigo_autorizacao =
+      new mongoose.Types.ObjectId().toString();
   }
 
-  next();
 });
 
 
-// 💰 CALCULAR PARCELA
-compraCartaoSchema.pre('validate', function (next) {
+// 💰 CALCULAR PARCELA (SEM next)
+compraCartaoSchema.pre('validate', function () {
 
   if (this.valor_total && this.quantidade_parcelas > 0) {
 
-    const total = parseFloat(this.valor_total.toString());
-    const parcela = total / this.quantidade_parcelas;
+    const total =
+      parseFloat(this.valor_total.toString());
 
-    this.valor_parcela = mongoose.Types.Decimal128.fromString(
-      parcela.toFixed(2)
-    );
+    const parcela =
+      total / this.quantidade_parcelas;
+
+    this.valor_parcela =
+      mongoose.Types.Decimal128.fromString(
+        parcela.toFixed(2)
+      );
   }
 
-  next();
 });
 
 

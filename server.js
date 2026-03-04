@@ -1,12 +1,9 @@
-/*
-pwd
-cd ..
-node server.js
-*/
-
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import http from 'http'; // 👈 Importado do Node
+import { Server } from 'socket.io'; // 👈 Importado do Socket.io
+
 import { connectDatabase } from './src/config/db.js';
 import usuarioRoutes from "./src/routes/usuario_route.js";
 import loginRoutes from "./src/routes/login_route.js";
@@ -18,10 +15,39 @@ import faturaRoutes from './src/routes/fatura_route.js';
 import chavePixRoutes from './src/routes/chave_pix_route.js';
 import cobrancaRoutes from './src/routes/cobranca_routes.js';
 
-
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app); // 👈 Cria o servidor HTTP envolvendo o Express
+
+// 🔌 Configurando o Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Permite que o Front-end conecte de qualquer porta
+    methods: ["GET", "POST"]
+  }
+});
+
+// 📡 Ouvindo as conexões dos usuários
+io.on('connection', (socket) => {
+  console.log(`🟢 Dispositivo conectado no Socket: ${socket.id}`);
+
+  // O Front-end vai avisar quem ele é, e nós o colocamos em uma "sala VIP" com o ID dele
+  socket.on('entrarNaConta', (usuario_id) => {
+    socket.join(String(usuario_id));
+    console.log(`🏠 Usuário ${usuario_id} entrou na sala de notificações.`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`🔴 Dispositivo desconectado: ${socket.id}`);
+  });
+});
+
+// 💉 Middleware de Injeção: Coloca o "io" disponível em TODAS as rotas
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 
 // 🔌 Conectar ao banco
 connectDatabase();
@@ -46,9 +72,9 @@ app.get('/', (req, res) => {
   res.json({ message: 'API Banco App rodando 🚀' });
 });
 
-// 🚀 Servidor
+// 🚀 Servidor (Usando o server.listen no lugar do app.listen)
 const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`✅ Servidor rodando em http://localhost:${PORT}`);
 });

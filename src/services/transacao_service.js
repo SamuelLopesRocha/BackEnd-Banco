@@ -218,7 +218,13 @@ export class TransacaoService {
 
       await session.commitTransaction()
 
-      return { message: 'Pix realizado com sucesso' }
+      // 🔥 ALTERAÇÃO AQUI: Devolvemos os dados para o Socket.io usar no Controller
+      return { 
+        message: 'Pix realizado com sucesso',
+        destinatario_id: contaDestino.usuario_id,
+        valor: valorValidado,
+        conta_origem: contaOrigem.numero_conta
+      }
 
     } catch (error) {
       await session.abortTransaction()

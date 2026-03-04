@@ -62,6 +62,15 @@ export class TransacaoController {
         descricao
       })
 
+      // 🔥 ALTERAÇÃO AQUI: Emite a notificação via Socket.io para a sala do destinatário
+      if (req.io) {
+        req.io.to(String(resultado.destinatario_id)).emit('pixRecebido', {
+          valor: resultado.valor,
+          conta_origem: resultado.conta_origem,
+          mensagem: `Você recebeu um Pix de R$ ${resultado.valor}`
+        });
+      }
+
       return res.status(201).json(resultado)
 
     } catch (error) {

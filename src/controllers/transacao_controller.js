@@ -52,17 +52,18 @@ export class TransacaoController {
   static async pix(req, res) {
     try {
 
-      const { chave, valor, descricao } = req.body
+      // 🔥 Extrai o codigo_pix do corpo da requisição
+      const { chave, valor, descricao, codigo_pix } = req.body
       const usuario_id = req.user.usuario_id
 
       const resultado = await TransacaoService.pix({
         usuario_id,
         chave,
         valor,
-        descricao
+        descricao,
+        codigo_pix_pago: codigo_pix // 🔥 Repassa o código pro Service
       })
 
-      // 🔥 ALTERAÇÃO AQUI: Emite a notificação via Socket.io para a sala do destinatário
       if (req.io) {
         req.io.to(String(resultado.destinatario_id)).emit('pixRecebido', {
           valor: resultado.valor,

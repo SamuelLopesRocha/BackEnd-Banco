@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import { Conta } from '../models/conta_model.js'
 import { Transacao } from '../models/transacao_model.js'
 import { ChavePix } from '../models/chave_pix_model.js'
+import { Cobranca } from '../models/cobranca_model.js' // 🔥 Importação do Model de Cobrança
 
 export class TransacaoService {
 
@@ -131,7 +132,8 @@ export class TransacaoService {
   // ======================================
   // PIX
   // ======================================
-  static async pix({ usuario_id, chave, valor, descricao }) {
+  // 🔥 Recebe o codigo_pix_pago agora
+  static async pix({ usuario_id, chave, valor, descricao, codigo_pix_pago }) {
 
     const session = await mongoose.startSession()
 
@@ -216,9 +218,17 @@ export class TransacaoService {
         status: 'CONCLUIDA'
       }], { session })
 
+      // 🔥 DAR BAIXA NA COBRANÇA PENDENTE (Se foi paga via QR Code)
+      if (codigo_pix_pago) {
+        await Cobranca.findOneAndUpdate(
+          { codigo_pix: codigo_pix_pago, status: 'PENDENTE' },
+          { status: 'PAGA' },
+          { session }
+        )
+      }
+
       await session.commitTransaction()
 
-      // 🔥 ALTERAÇÃO AQUI: Devolvemos os dados para o Socket.io usar no Controller
       return { 
         message: 'Pix realizado com sucesso',
         destinatario_id: contaDestino.usuario_id,

@@ -144,9 +144,6 @@ cartaoSchema.virtual('limite_disponivel').get(function () {
 // 📌 INDEX
 // ===============================
 
-cartaoSchema.index({ usuario_id: 1 });
-cartaoSchema.index({ conta_id: 1 });
-cartaoSchema.index({ numero_cartao: 1 });
 
 
 export const Cartao = mongoose.model('Cartao', cartaoSchema);

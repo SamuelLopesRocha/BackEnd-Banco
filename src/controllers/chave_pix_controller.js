@@ -12,6 +12,8 @@ export class ChavePixController {
       const { chave, tipo_chave } = req.body;
       const usuario_id = req.user.usuario_id;
 
+      const tipo_chave_upper = tipo_chave?.toUpperCase();
+
       // 1. Verifica se a chave já existe no banco
       const chaveExistente = await ChavePix.findOne({ chave });
       if (chaveExistente) {
@@ -27,7 +29,7 @@ export class ChavePixController {
       // 3. Salva a nova chave
       const novaChave = await ChavePix.create({
         chave,
-        tipo_chave,
+        tipo_chave: tipo_chave_upper,
         numero_conta: conta.numero_conta,
         usuario_id
       });

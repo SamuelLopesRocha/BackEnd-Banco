@@ -56,6 +56,47 @@ export default class FaturaService {
 
 
   // ===============================
+  // CRIAR FATURA
+  // ===============================
+  static async criarFatura({ cartao_id, mes, ano }) {
+
+    const cartao = await Cartao.findOne({ id_cartao: Number(cartao_id) })
+
+    if (!cartao)
+      throw new Error('Cartão não encontrado')
+
+    const mesFormatado = `${ano}-${String(mes).padStart(2, '0')}`
+
+    const faturaExistente = await Fatura.findOne({
+      cartao_id: Number(cartao_id),
+      mes_referencia: mesFormatado
+    })
+
+    if (faturaExistente)
+      throw new Error('Fatura já existe para este mês/ano')
+
+    const DIA_FECHAMENTO = 10
+    const DIA_VENCIMENTO = 20
+
+    const dataFechamento = new Date(ano, mes - 1, DIA_FECHAMENTO)
+    const dataVencimento = new Date(ano, mes - 1, DIA_VENCIMENTO)
+
+    const fatura = await Fatura.create({
+      cartao_id: Number(cartao_id),
+      conta_id: cartao.conta_id,
+      mes_referencia: mesFormatado,
+      valor_total: 0,
+      data_fechamento: dataFechamento,
+      data_vencimento: dataVencimento,
+      status_fatura: 'ABERTA'
+    })
+
+    return fatura
+  }
+
+
+
+  // ===============================
   // LISTAR POR CARTAO
   // ===============================
   static async listarPorCartao(cartaoId) {
@@ -167,10 +208,10 @@ export default class FaturaService {
     // LIBERAR LIMITE CARTÃO
     // ============================
 
-    cartao.limite_utilizado -= fatura.valor_total
+    cartao.limite_usado -= fatura.valor_total
 
-    if (cartao.limite_utilizado < 0)
-      cartao.limite_utilizado = 0
+    if (cartao.limite_usado < 0)
+      cartao.limite_usado = 0
 
     await cartao.save()
 

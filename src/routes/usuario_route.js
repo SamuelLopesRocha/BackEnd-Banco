@@ -6,6 +6,7 @@ import {
   updateUsuario,
   deleteUsuario,
   getMeusDados,
+  verificarEmail,
 } from '../controllers/usuario_controller.js';
 import { authMiddleware } from '../middlewares/auth_middleware.js';
 
@@ -13,6 +14,7 @@ const router = express.Router();
 
 router.post('/', createUsuario);
 router.get('/', listUsuarios);
+router.get('/verificar-email', verificarEmail);
 router.get('/meus-dados', authMiddleware, getMeusDados);
 router.get('/:id', getUsuarioById);
 router.put('/:id', updateUsuario);

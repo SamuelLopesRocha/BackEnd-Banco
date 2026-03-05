@@ -73,8 +73,8 @@ export class CompraCartaoService {
       // VALIDAR LIMITE
       // ============================
       const limiteDisponivel =
-        Number(cartao.limite_credito) -
-        Number(cartao.limite_utilizado)
+        Number(cartao.limite_total) -
+        Number(cartao.limite_usado)
 
       if (valor > limiteDisponivel) {
         throw new Error('Limite insuficiente')
@@ -83,8 +83,8 @@ export class CompraCartaoService {
       // ============================
       // ATUALIZAR LIMITE
       // ============================
-      cartao.limite_utilizado =
-        Number(cartao.limite_utilizado) + valor
+      cartao.limite_usado =
+        Number(cartao.limite_usado) + valor
 
       await cartao.save({ session })
 

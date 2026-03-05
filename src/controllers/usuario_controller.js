@@ -5,6 +5,7 @@ import { ChavePix } from '../models/chave_pix_model.js';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
+import crypto from 'crypto';
 
 const execAsync = promisify(exec);
 
@@ -130,6 +131,9 @@ export const createUsuario = async (req, res) => {
     const ultimo = await Usuario.findOne().sort({ usuario_id: -1 });
     const proximoId = ultimo ? ultimo.usuario_id + 1 : 1;
 
+    // � Gerar token de verificação de e-mail
+    const token = crypto.randomUUID();
+
     // 💾 Criar usuário
     const novoUsuario = await Usuario.create({
       usuario_id: proximoId,
@@ -144,8 +148,9 @@ export const createUsuario = async (req, res) => {
       numero,
       complemento,
       senha: senhaHash,
-      status_conta: 'ATIVA',
-      email_enviado: false // 🔥 GARANTIDO PARA O RPA
+      status_conta: 'PENDENTE',
+      email_enviado: false,
+      token_verificacao: token // 🔑 salvo no usuário para o RPA encontrar
     });
 
     // 🔎 Criar conta corrente automaticamente
@@ -226,6 +231,32 @@ export async function getUsuarioById(req, res) {
   } catch (err) {
     console.error('Erro ao buscar usuário:', err);
     res.status(500).json({ error: 'Erro ao buscar usuário.' });
+  }
+}
+
+// VERIFICAR EMAIL
+export async function verificarEmail(req, res) {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Token não informado.' });
+    }
+
+    const usuario = await Usuario.findOneAndUpdate(
+      { token_verificacao: token },
+      { status_conta: 'ATIVA', email_verificado: true, token_verificacao: null },
+      { new: true }
+    );
+
+    if (!usuario) {
+      return res.status(404).json({ error: 'Token inválido ou já utilizado.' });
+    }
+
+    return res.status(200).json({ message: 'E-mail verificado com sucesso! A conta está ativa!' });
+  } catch (err) {
+    console.error('Erro ao verificar e-mail:', err);
+    return res.status(500).json({ error: 'Erro interno ao verificar e-mail.' });
   }
 }
 

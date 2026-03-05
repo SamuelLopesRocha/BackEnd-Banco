@@ -77,13 +77,24 @@ const usuarioSchema = new mongoose.Schema({
 
   status_conta: {
     type: String,
-    enum: ['ATIVA', 'INATIVA', 'BLOQUEADA', 'EXCLUIDA'],
-    default: 'ATIVA'
+    enum: {
+      values: ['ATIVA', 'INATIVA', 'BLOQUEADA', 'EXCLUIDA', 'PENDENTE'],
+      message: '{VALUE} não é um status válido.'
+    },
+    default: 'PENDENTE'
   },
 
   email_enviado: {
     type: Boolean,
     default: false
+  },
+
+  token_verificacao: {
+    type: String, default: null
+  },
+
+  email_verificado: {
+    type: Boolean, default: false
   },
 
 }, {

@@ -16,7 +16,7 @@ export class CartaoService {
 
     const cartao = await Cartao.create({
       usuario_id,
-      conta_id: conta.numero_conta,
+      conta_id: conta.id_conta,
       tipo: 'MULTIPLO',
       bandeira: 'VISA',
       status_cartao: 'ATIVO',
@@ -33,7 +33,7 @@ export class CartaoService {
   // ======================================
   static async buscarCartao(id) {
 
-    const cartao = await Cartao.findById(id);
+    const cartao = await Cartao.findOne({ id_cartao: Number(id) });
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
@@ -58,7 +58,7 @@ export class CartaoService {
   // ======================================
   static async bloquearCartao(id) {
 
-    const cartao = await Cartao.findById(id);
+    const cartao = await Cartao.findOne({ id_cartao: Number(id) });
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
@@ -82,7 +82,7 @@ export class CartaoService {
   // ======================================
   static async desbloquearCartao(id) {
 
-    const cartao = await Cartao.findById(id);
+    const cartao = await Cartao.findOne({ id_cartao: Number(id) });
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
@@ -106,7 +106,7 @@ export class CartaoService {
   // ======================================
   static async alterarLimite(id, novoLimite) {
 
-    const cartao = await Cartao.findById(id);
+    const cartao = await Cartao.findOne({ id_cartao: Number(id) });
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
@@ -133,7 +133,7 @@ export class CartaoService {
   // ======================================
   static async consultarLimite(id) {
 
-    const cartao = await Cartao.findById(id);
+    const cartao = await Cartao.findOne({ id_cartao: Number(id) });
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
@@ -152,13 +152,13 @@ export class CartaoService {
   // ======================================
   static async deletarCartao(id) {
 
-    const cartao = await Cartao.findById(id);
+    const cartao = await Cartao.findOne({ id_cartao: Number(id) });
 
     if (!cartao) {
       throw new Error('Cartão não encontrado');
     }
 
-    await Cartao.deleteOne({ _id: id });
+    await Cartao.deleteOne({ id_cartao: Number(id) });
 
     return {
       mensagem: 'Cartão deletado com sucesso'

@@ -161,6 +161,8 @@ export const createUsuario = async (req, res) => {
 
       console.log("Enviando solicitação para o serviço de e-mail (RPA)...");
 
+      console.log("Enviando código para RPA:", email, codigo); //dps apagar essa linha é apenas teste
+      
       await fetch("https://rpa-banco-x3dx.onrender.com/enviar-email", {
         method: "POST",
         headers: {

@@ -1,4 +1,5 @@
 import express from 'express';
+
 import {
   createUsuario,
   listUsuarios,
@@ -6,7 +7,8 @@ import {
   updateUsuario,
   deleteUsuario,
   getMeusDados,
-  verificarCodigo
+  verificarCodigo,
+  reenviarCodigo
 } from '../controllers/usuario_controller.js';
 
 import { authMiddleware } from '../middlewares/auth_middleware.js';

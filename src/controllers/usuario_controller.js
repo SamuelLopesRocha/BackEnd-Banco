@@ -152,6 +152,7 @@ export const reenviarCodigo = async (req, res) => {
 
     usuario.codigo_verificacao = novoCodigo;
     usuario.codigo_expira = Date.now() + 10 * 60 * 1000;
+    usuario.email_enviado = false
 
     await usuario.save();
 

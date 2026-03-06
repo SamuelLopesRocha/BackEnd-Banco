@@ -32,11 +32,11 @@ const usuarioSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
-  
+
   senha: {
-  type: String,
-  required: true
-  },  
+    type: String,
+    required: true
+  },
 
   telefone: {
     type: String,
@@ -78,21 +78,34 @@ const usuarioSchema = new mongoose.Schema({
   status_conta: {
     type: String,
     enum: ['ATIVA', 'INATIVA', 'BLOQUEADA', 'EXCLUIDA'],
-    default: 'ATIVA'
+    default: 'INATIVA'
+  },
+
+  email_verificado: {
+    type: Boolean,
+    default: false
+  },
+
+  codigo_verificacao: {
+    type: String,
+    default: null
+  },
+
+  codigo_expira: {
+    type: Date,
+    default: null
   },
 
   email_enviado: {
     type: Boolean,
     default: false
-  },
+  }
 
 }, {
   timestamps: true,
   versionKey: false
 });
 
-
-// 🔢 GERAR ID SEQUENCIAL — SEM NEXT()
 usuarioSchema.pre('save', async function () {
   if (this.isNew) {
     const ultimo = await mongoose.model('Usuario')

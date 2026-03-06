@@ -2,13 +2,7 @@ import { Usuario } from '../models/usuario_model.js';
 import bcrypt from 'bcryptjs';
 import { Conta } from '../models/conta_model.js';
 import { ChavePix } from '../models/chave_pix_model.js'; 
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
-
-const execAsync = promisify(exec);
-
-
+import fetch from "node-fetch";
 
 // 🧠 UTILIDADES
 function validarCPF(cpf) {
@@ -48,15 +42,22 @@ function gerarNumeroConta() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// GERAR DÍGITO SIMPLES
+// GERAR DÍGITO
 function gerarDigito(numero) {
   const soma = numero.split('').reduce((acc, n) => acc + parseInt(n), 0);
   return (soma % 10).toString();
 }
 
+// GERAR CÓDIGO DE VERIFICAÇÃO
+function gerarCodigoVerificacao() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+
 // CREATE
 export const createUsuario = async (req, res) => {
   try {
+
     let {
       nome_completo,
       cpf,
@@ -71,12 +72,10 @@ export const createUsuario = async (req, res) => {
       senha
     } = req.body;
 
-    // 📌 Campos obrigatórios
     if (!nome_completo || !cpf || !data_nascimento || !email || !telefone || !cidade || !estado || !cep || !numero || !senha) {
       return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos.' });
     }
 
-    // ✂️ Sanitização
     nome_completo = nome_completo.trim();
     cpf = cpf.trim();
     email = email.trim().toLowerCase();
@@ -87,50 +86,42 @@ export const createUsuario = async (req, res) => {
     numero = numero.trim();
     complemento = complemento?.trim() || null;
 
-    // 🛑 Nome válido
     if (nome_completo.length < 5) {
       return res.status(400).json({ error: 'Nome completo inválido.' });
     }
 
-    // 🛑 CPF válido
     if (!validarCPF(cpf)) {
       return res.status(400).json({ error: 'CPF inválido.' });
     }
 
-    // 🛑 Email válido
     if (!validarEmail(email)) {
       return res.status(400).json({ error: 'E-mail inválido.' });
     }
 
-    // 🛑 Idade mínima
     if (calcularIdade(data_nascimento) < 18) {
       return res.status(400).json({ error: 'Usuário deve ter no mínimo 18 anos.' });
     }
 
-    // 🔐 Senha válida
     if (senha.length < 6) {
       return res.status(400).json({ error: 'Senha deve ter no mínimo 6 caracteres.' });
     }
 
-    // 🚫 CPF duplicado
     if (await Usuario.findOne({ cpf })) {
       return res.status(400).json({ error: 'CPF já cadastrado.' });
     }
 
-    // 🚫 Email duplicado
     if (await Usuario.findOne({ email })) {
       return res.status(400).json({ error: 'E-mail já cadastrado.' });
     }
 
-    // 🔐 Criptografar senha
     const salt = await bcrypt.genSalt(10);
     const senhaHash = await bcrypt.hash(senha, salt);
 
-    // 🔢 ID sequencial
     const ultimo = await Usuario.findOne().sort({ usuario_id: -1 });
     const proximoId = ultimo ? ultimo.usuario_id + 1 : 1;
 
-    // 💾 Criar usuário
+    const codigo = gerarCodigoVerificacao();
+
     const novoUsuario = await Usuario.create({
       usuario_id: proximoId,
       nome_completo,
@@ -144,11 +135,12 @@ export const createUsuario = async (req, res) => {
       numero,
       complemento,
       senha: senhaHash,
-      status_conta: 'ATIVA',
-      email_enviado: false // 🔥 GARANTIDO PARA O RPA
+      status_conta: 'INATIVA',
+      codigo_verificacao: codigo,
+      codigo_expira: Date.now() + 10 * 60 * 1000,
+      email_enviado: false
     });
 
-    // 🔎 Criar conta corrente automaticamente
     const numeroConta = gerarNumeroConta();
     const digito = gerarDigito(numeroConta);
 
@@ -165,151 +157,198 @@ export const createUsuario = async (req, res) => {
       permite_cheque_especial: true
     });
 
-    const usuarioLimpo = novoUsuario.toObject();
-    delete usuarioLimpo.senha;
-
     try {
-      console.log("Iniciando RPA de envio de e-mail...");
-      
-      const caminhoRPA = path.join(process.cwd(), 'src', 'rpa', 'main.py');
-      
-      // Executa o Python e espera ele terminar
-      const { stdout } = await execAsync(`python  "${caminhoRPA}"`);
-      
-      console.log("RPA finalizado:\n", stdout);
 
-      // RPA enviou o email, avisa o front-end!
+      console.log("Enviando solicitação para o serviço de e-mail (RPA)...");
+
+      await fetch("https://rpa-banco-x3dx.onrender.com/enviar-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: email,
+          codigo: codigo
+        })
+      });
+
       return res.status(201).json({
-        message: 'Usuário criado com sucesso e e-mail enviado para a sua caixa de entrada!',
-        usuario: usuarioLimpo
+        message: 'Usuário criado com sucesso! Código enviado para o seu e-mail.'
       });
 
     } catch (erroRpa) {
+
       console.error("Erro ao rodar o RPA:", erroRpa);
-      // Se o Python falhar (ex: sem internet), o usuário continua salvo no banco!
+
       return res.status(201).json({
-        message: 'Usuário criado com sucesso! O e-mail de confirmação chegará em alguns minutos.',
-        usuario: usuarioLimpo
+        message: 'Usuário criado! O código chegará em alguns minutos.'
       });
+
     }
 
   } catch (error) {
+
     console.error('Erro ao criar usuário:', error);
-    return res.status(500).json({ error: 'Erro interno ao criar usuário.' });
+
+    return res.status(500).json({
+      error: 'Erro interno ao criar usuário.'
+    });
+
   }
+};
+
+
+// VERIFICAR CÓDIGO
+export const verificarCodigo = async (req, res) => {
+
+  try {
+
+    const { email, codigo } = req.body;
+
+    const usuario = await Usuario.findOne({ email });
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuário não encontrado." });
+    }
+
+    if (usuario.codigo_verificacao !== codigo) {
+      return res.status(400).json({ error: "Código inválido." });
+    }
+
+    if (usuario.codigo_expira < Date.now()) {
+      return res.status(400).json({ error: "Código expirado." });
+    }
+
+    usuario.email_verificado = true;
+    usuario.status_conta = "ATIVA";
+    usuario.codigo_verificacao = null;
+
+    await usuario.save();
+
+    res.json({
+      message: "Conta verificada com sucesso!"
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      error: "Erro ao verificar código."
+    });
+
+  }
+
 };
 
 
 // LIST
 export async function listUsuarios(req, res) {
   try {
-    const usuarios = await Usuario.find({ status_conta: { $ne: 'EXCLUIDA' } })
-      .sort({ createdAt: -1 });
+
+    const usuarios = await Usuario.find({
+      status_conta: { $ne: 'EXCLUIDA' }
+    }).sort({ createdAt: -1 });
 
     res.json(usuarios);
+
   } catch (err) {
+
     console.error('Erro ao listar usuários:', err);
-    res.status(500).json({ error: 'Erro ao listar usuários.' });
+
+    res.status(500).json({
+      error: 'Erro ao listar usuários.'
+    });
+
   }
 }
+
 
 // GET BY ID
 export async function getUsuarioById(req, res) {
+
   try {
-    const usuario = await Usuario.findOne({ usuario_id: req.params.id });
+
+    const usuario = await Usuario.findOne({
+      usuario_id: req.params.id
+    });
 
     if (!usuario || usuario.status_conta === 'EXCLUIDA') {
-      return res.status(404).json({ error: 'Usuário não encontrado.' });
+      return res.status(404).json({
+        error: 'Usuário não encontrado.'
+      });
     }
 
     res.json(usuario);
+
   } catch (err) {
+
     console.error('Erro ao buscar usuário:', err);
-    res.status(500).json({ error: 'Erro ao buscar usuário.' });
+
+    res.status(500).json({
+      error: 'Erro ao buscar usuário.'
+    });
+
   }
+
 }
+
 
 // UPDATE
 export async function updateUsuario(req, res) {
+
   try {
-    const usuarioAntes = await Usuario.findOne({ usuario_id: req.params.id });
+
+    const usuarioAntes = await Usuario.findOne({
+      usuario_id: req.params.id
+    });
 
     if (!usuarioAntes) {
-      return res.status(404).json({ error: 'Usuário não encontrado.' });
+      return res.status(404).json({
+        error: 'Usuário não encontrado.'
+      });
     }
 
     if (usuarioAntes.status_conta === 'EXCLUIDA') {
-      return res.status(400).json({ error: 'Conta desativada. Atualização bloqueada.' });
+      return res.status(400).json({
+        error: 'Conta desativada.'
+      });
     }
 
     const update = {};
 
-    // 📝 Nome
     if (req.body.nome_completo) {
+
       const nome = req.body.nome_completo.trim();
-      if (nome.length < 5) return res.status(400).json({ error: 'Nome inválido.' });
-      update.nome_completo = nome;
-    }
 
-    // 🎂 Data nascimento
-    if (req.body.data_nascimento) {
-      if (calcularIdade(req.body.data_nascimento) < 18) {
-        return res.status(400).json({ error: 'Idade mínima 18 anos.' });
+      if (nome.length < 5) {
+        return res.status(400).json({
+          error: 'Nome inválido.'
+        });
       }
-      update.data_nascimento = req.body.data_nascimento;
+
+      update.nome_completo = nome;
+
     }
 
-    // 🔐 Atualizar senha
     if (req.body.senha) {
-        if (req.body.senha.length < 6) {
-            return res.status(400).json({ error: 'Senha deve ter no mínimo 6 caracteres.' });
+
+      if (req.body.senha.length < 6) {
+        return res.status(400).json({
+          error: 'Senha deve ter no mínimo 6 caracteres.'
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      update.senha = await bcrypt.hash(req.body.senha, salt);
+
     }
 
-    const salt = await bcrypt.genSalt(10);
-    update.senha = await bcrypt.hash(req.body.senha, salt);
-}
-
-
-    // 📞 Outros campos
     if (req.body.telefone) update.telefone = req.body.telefone.trim();
     if (req.body.cidade) update.cidade = req.body.cidade.trim();
     if (req.body.estado) update.estado = req.body.estado.trim().toUpperCase();
     if (req.body.cep) update.cep = req.body.cep.trim();
     if (req.body.numero) update.numero = req.body.numero.trim();
-    if (req.body.complemento !== undefined) update.complemento = req.body.complemento?.trim() || null;
-
-    // 🚫 CPF
-    if (req.body.cpf) {
-      const cpf = req.body.cpf.trim();
-      if (!validarCPF(cpf)) return res.status(400).json({ error: 'CPF inválido.' });
-
-      const existente = await Usuario.findOne({ cpf });
-      if (existente && existente.usuario_id !== usuarioAntes.usuario_id) {
-        return res.status(400).json({ error: 'CPF já em uso.' });
-      }
-      update.cpf = cpf;
-    }
-
-    // 🚫 EMAIL
-    if (req.body.email) {
-      const email = req.body.email.trim().toLowerCase();
-      if (!validarEmail(email)) return res.status(400).json({ error: 'E-mail inválido.' });
-
-      const existente = await Usuario.findOne({ email });
-      if (existente && existente.usuario_id !== usuarioAntes.usuario_id) {
-        return res.status(400).json({ error: 'E-mail já em uso.' });
-      }
-      update.email = email;
-    }
-
-    // ⚠️ STATUS
-    if (req.body.status_conta) {
-      const permitido = ['ATIVA', 'BLOQUEADA', 'ENCERRADA'];
-      if (!permitido.includes(req.body.status_conta)) {
-        return res.status(400).json({ error: 'Status inválido.' });
-      }
-      update.status_conta = req.body.status_conta;
-    }
 
     const usuarioAtualizado = await Usuario.findOneAndUpdate(
       { usuario_id: req.params.id },
@@ -323,69 +362,175 @@ export async function updateUsuario(req, res) {
     });
 
   } catch (err) {
+
     console.error('Erro ao atualizar usuário:', err);
-    res.status(500).json({ error: 'Erro ao atualizar usuário.' });
+
+    res.status(500).json({
+      error: 'Erro ao atualizar usuário.'
+    });
+
   }
+
 }
 
-// DELETE → SOFT DELETE
+
+// DELETE
 export async function deleteUsuario(req, res) {
+
   try {
-    const usuario = await Usuario.findOne({ usuario_id: req.params.id });
+
+    const usuario = await Usuario.findOne({
+      usuario_id: req.params.id
+    });
 
     if (!usuario) {
-      return res.status(404).json({ error: 'Usuário não encontrado.' });
-    }
-
-    if (usuario.status_conta === 'EXCLUIDA') {
-      return res.status(400).json({ error: 'Usuário já excluído.' });
+      return res.status(404).json({
+        error: 'Usuário não encontrado.'
+      });
     }
 
     usuario.status_conta = 'EXCLUIDA';
+
     await usuario.save();
 
-    res.json({ message: 'Usuário desativado com sucesso.' });
+    res.json({
+      message: 'Usuário desativado com sucesso.'
+    });
 
   } catch (err) {
+
     console.error('Erro ao excluir usuário:', err);
-    res.status(500).json({ error: 'Erro ao excluir usuário.' });
+
+    res.status(500).json({
+      error: 'Erro ao excluir usuário.'
+    });
+
   }
+
 }
 
 
+// MEUS DADOS
 export const getMeusDados = async (req, res) => {
+
   try {
+
     const idDoUsuario = req.user.usuario_id;
 
-    // 1. BUSCA O USUÁRIO
-    const usuario = await Usuario.findOne({ usuario_id: idDoUsuario }).select('-senha');
+    const usuario = await Usuario.findOne({
+      usuario_id: idDoUsuario
+    }).select('-senha');
 
     if (!usuario) {
-      return res.status(404).json({ error: 'Usuário não encontrado.' });
+      return res.status(404).json({
+        error: 'Usuário não encontrado.'
+      });
     }
 
-    // 2. BUSCA A CONTA (Para pegar o saldo)
-    const conta = await Conta.findOne({ usuario_id: idDoUsuario });
+    const conta = await Conta.findOne({
+      usuario_id: idDoUsuario
+    });
 
-    // 3. BUSCA AS CHAVES PIX DO USUÁRIO 🔥
-    const chavesDoUsuario = await ChavePix.find({ usuario_id: idDoUsuario });
-    
-    // Extrai apenas os nomes das chaves para uma lista (ex: ['focas@email.com', '11999999999'])
+    const chavesDoUsuario = await ChavePix.find({
+      usuario_id: idDoUsuario
+    });
+
     const listaChavesPix = chavesDoUsuario.map(c => c.chave);
 
-    // 4. PREPARA A RESPOSTA
     const respostaCompleta = {
       ...usuario.toObject(),
       saldo_disponivel: conta ? conta.saldo : 0,
       saldo_poupanca: 0,
       tipo_conta: conta ? conta.tipo_conta : 'CORRENTE',
-      numero_conta: conta ? conta.numero_conta : null, // Deixamos escondido aqui para o sistema usar depois
-      chaves_pix: listaChavesPix // 🔥 Passando as Chaves Pix para o Front-end!
+      numero_conta: conta ? conta.numero_conta : null,
+      chaves_pix: listaChavesPix
     };
 
     res.status(200).json(respostaCompleta);
+
   } catch (error) {
-    console.error("Erro ao buscar dados do usuário logado:", error);
-    res.status(500).json({ error: 'Erro interno no servidor.' });
+
+    console.error("Erro ao buscar dados:", error);
+
+    res.status(500).json({
+      error: 'Erro interno no servidor.'
+    });
+
   }
+
+};
+
+// REENVIAR CÓDIGO DE VERIFICAÇÃO
+export const reenviarCodigo = async (req, res) => {
+
+  try {
+
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        error: "E-mail é obrigatório."
+      });
+    }
+
+    const usuario = await Usuario.findOne({ email });
+
+    if (!usuario) {
+      return res.status(404).json({
+        error: "Usuário não encontrado."
+      });
+    }
+
+    if (usuario.email_verificado) {
+      return res.status(400).json({
+        error: "Esta conta já foi verificada."
+      });
+    }
+
+    const novoCodigo = gerarCodigoVerificacao();
+
+    usuario.codigo_verificacao = novoCodigo;
+    usuario.codigo_expira = Date.now() + 10 * 60 * 1000;
+
+    await usuario.save();
+
+    try {
+
+      console.log("Reenviando código por e-mail...");
+
+      await fetch("https://rpa-banco-x3dx.onrender.com/enviar-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: usuario.email,
+          codigo: novoCodigo
+        })
+      });
+      
+      return res.json({
+        message: "Novo código enviado para o seu e-mail."
+      });
+
+    } catch (erroRpa) {
+
+      console.error("Erro ao reenviar código:", erroRpa);
+
+      return res.status(200).json({
+        message: "Código gerado, o e-mail pode levar alguns minutos."
+      });
+
+    }
+
+  } catch (error) {
+
+    console.error("Erro ao reenviar código:", error);
+
+    res.status(500).json({
+      error: "Erro interno ao reenviar código."
+    });
+
+  }
+
 };

@@ -217,8 +217,6 @@ export class CompraCartaoService {
     } finally {
 
       session.endSession()
-
     }
   }
-
 }

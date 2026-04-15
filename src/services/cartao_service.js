@@ -13,6 +13,9 @@ export class CartaoService {
     if (!conta) {
       throw new Error('Conta não encontrada para o usuário');
     }
+    if (conta.status_conta !== 'ATIVA') {
+      throw new Error('Conta do usuário não está ativa');
+    }
 
     const cartao = await Cartao.create({
       usuario_id,

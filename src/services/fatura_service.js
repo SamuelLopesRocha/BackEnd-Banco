@@ -83,7 +83,17 @@ export default class FaturaService {
     return fatura
   }
 
+  static async criarFatura(cartao_id, conta_id, data_compra) {
+    if (!cartao_id || !conta_id)
+      throw new Error("cartao_id e conta_id são obrigatórios")
+    const data = data_compra ? new Date(data_compra) : new Date()
 
+    return this.obterOuCriarFatura(
+      Number(cartao_id),
+      Number(conta_id),
+      data
+    )
+  }
 
   // ===============================
   // FECHAR FATURA
@@ -123,6 +133,9 @@ export default class FaturaService {
 
     if (fatura.status_fatura === 'PAGA')
       throw new Error('Fatura já está paga')
+    if (fatura.status_fatura !== 'FECHADA')
+      throw new Error('Apenas faturas fechadas podem ser pagas')
+
 
     // ============================
     // BUSCAR CONTA

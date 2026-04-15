@@ -43,9 +43,11 @@ export class CompraCartaoService {
         throw new Error('Descrição inválida')
       }
 
-      const parcelas = Number(quantidade_parcelas) || 1
+      const parcelas = quantidade_parcelas === undefined || quantidade_parcelas === null || quantidade_parcelas === ''
+        ? 1
+        : Number(quantidade_parcelas)
 
-      if (parcelas <= 0) {
+      if (!Number.isInteger(parcelas) || parcelas <= 0) {
         throw new Error('Quantidade de parcelas inválida')
       }
 

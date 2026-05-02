@@ -4,6 +4,8 @@ import cors from 'cors';
 import http from 'http'; // 👈 Importado do Node
 import { Server } from 'socket.io'; // 👈 Importado do Socket.io
 
+import swaggerUi from 'swagger-ui-express';
+import { specs } from './src/config/swagger.js';
 import { connectDatabase } from './src/config/db.js';
 import usuarioRoutes from "./src/routes/usuario_route.js";
 import loginRoutes from "./src/routes/login_route.js";
@@ -57,6 +59,11 @@ connectDatabase();
 app.use(cors());
 app.use(express.json());
 
+// Documentação Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  customCss: '.swagger-ui .topbar { display: none }',
+}));
+
 // 📌 Rotas
 app.use('/usuarios', usuarioRoutes);
 app.use("/auth", loginRoutes);
@@ -79,4 +86,5 @@ const PORT = process.env.PORT || 8000;
 
 server.listen(PORT, () => {
   console.log(`✅ Servidor rodando em http://localhost:${PORT}`);
+  console.log(`📚 Documentação disponível em http://localhost:${PORT}/api-docs`);
 });

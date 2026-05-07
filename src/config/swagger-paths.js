@@ -34,6 +34,86 @@ export const swaggerPaths = {
       },
     },
   },
+  '/usuarios/verificar-codigo': {
+    post: {
+      summary: 'Verificar código de ativação',
+      description: 'Ativa a conta do usuário usando o código enviado por e-mail.',
+      tags: ['Usuários'],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['email', 'codigo'],
+              properties: {
+                email: {
+                  type: 'string',
+                  format: 'email',
+                  example: 'joao@example.com',
+                },
+                codigo: {
+                  type: 'string',
+                  example: '123456',
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Conta ativada com sucesso',
+          content: {
+            'application/json': {
+              example: { message: 'Conta ativada com sucesso!' },
+            },
+          },
+        },
+        '400': {
+          description: 'Código inválido ou expirado',
+        },
+      },
+    },
+  },
+  '/usuarios/reenviar-codigo': {
+    post: {
+      summary: 'Reenviar código de ativação',
+      description: 'Reenvia o código de ativação para o e-mail do usuário.',
+      tags: ['Usuários'],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['email'],
+              properties: {
+                email: {
+                  type: 'string',
+                  format: 'email',
+                  example: 'joao@example.com',
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Código reenviado com sucesso',
+          content: {
+            'application/json': {
+              example: { message: 'Código reenviado para o e-mail!' },
+            },
+          },
+        },
+        '404': {
+          description: 'Usuário não encontrado',
+        },
+      },
+    },
+  },
   '/usuarios': {
     post: {
       summary: 'Criar novo usuário',
@@ -357,8 +437,12 @@ export const swaggerPaths = {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['valor', 'descricao'],
+              required: ['conta_origem', 'valor', 'descricao'],
               properties: {
+                conta_origem: {
+                  type: 'string',
+                  example: '123456-7',
+                },
                 valor: {
                   type: 'number',
                   example: 500.00,
@@ -489,6 +573,28 @@ export const swaggerPaths = {
       summary: 'Listar minhas transações',
       tags: ['Transações'],
       security: [{ BearerAuth: [] }],
+      parameters: [
+        {
+          name: 'page',
+          in: 'query',
+          required: false,
+          schema: {
+            type: 'integer',
+            default: 1,
+          },
+          description: 'Página da listagem',
+        },
+        {
+          name: 'limit',
+          in: 'query',
+          required: false,
+          schema: {
+            type: 'integer',
+            default: 10,
+          },
+          description: 'Número de itens por página',
+        },
+      ],
       responses: {
         '200': {
           description: 'Lista de transações do usuário',
@@ -1300,6 +1406,283 @@ export const swaggerPaths = {
         },
         '404': {
           description: 'Chave PIX não encontrada',
+        },
+      },
+    },
+  },
+  '/cobrancas': {
+    post: {
+      summary: 'Criar cobrança',
+      tags: ['Cobranças'],
+      security: [{ BearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['valor', 'descricao', 'vencimento'],
+              properties: {
+                valor: {
+                  type: 'number',
+                  example: 200.00,
+                },
+                descricao: {
+                  type: 'string',
+                  example: 'Cobrança de serviço',
+                },
+                vencimento: {
+                  type: 'string',
+                  format: 'date',
+                  example: '2025-12-31',
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        '201': {
+          description: 'Cobrança criada com sucesso',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  valor: { type: 'number' },
+                  descricao: { type: 'string' },
+                  vencimento: { type: 'string' },
+                  status: { type: 'string' },
+                  codigo_cobranca: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+        '401': {
+          description: 'Não autenticado',
+        },
+      },
+    },
+    get: {
+      summary: 'Listar minhas cobranças',
+      tags: ['Cobranças'],
+      security: [{ BearerAuth: [] }],
+      responses: {
+        '200': {
+          description: 'Lista de cobranças do usuário',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    valor: { type: 'number' },
+                    descricao: { type: 'string' },
+                    vencimento: { type: 'string' },
+                    status: { type: 'string' },
+                    codigo_cobranca: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        },
+        '401': {
+          description: 'Não autenticado',
+        },
+      },
+    },
+  },
+  '/cobrancas/{id}': {
+    delete: {
+      summary: 'Deletar cobrança',
+      tags: ['Cobranças'],
+      security: [{ BearerAuth: [] }],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: {
+            type: 'string',
+          },
+          description: 'ID da cobrança',
+        },
+      ],
+      responses: {
+        '200': {
+          description: 'Cobrança deletada com sucesso',
+        },
+        '401': {
+          description: 'Não autenticado',
+        },
+        '404': {
+          description: 'Cobrança não encontrada',
+        },
+      },
+    },
+  },
+  '/boletos': {
+    post: {
+      summary: 'Gerar boleto',
+      tags: ['Boletos'],
+      security: [{ BearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['valor', 'vencimento', 'descricao'],
+              properties: {
+                valor: {
+                  type: 'number',
+                  example: 150.00,
+                },
+                vencimento: {
+                  type: 'string',
+                  format: 'date',
+                  example: '2025-12-31',
+                },
+                descricao: {
+                  type: 'string',
+                  example: 'Pagamento de conta',
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        '201': {
+          description: 'Boleto gerado com sucesso',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  id: {
+                    type: 'string',
+                  },
+                  codigo_barras: {
+                    type: 'string',
+                  },
+                  valor: {
+                    type: 'number',
+                  },
+                  vencimento: {
+                    type: 'string',
+                  },
+                  status: {
+                    type: 'string',
+                  },
+                },
+              },
+            },
+          },
+        },
+        '401': {
+          description: 'Não autenticado',
+        },
+      },
+    },
+  },
+  '/boletos/pendentes': {
+    get: {
+      summary: 'Listar boletos pendentes',
+      tags: ['Boletos'],
+      security: [{ BearerAuth: [] }],
+      responses: {
+        '200': {
+          description: 'Lista de boletos pendentes',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    valor: { type: 'number' },
+                    vencimento: { type: 'string' },
+                    descricao: { type: 'string' },
+                    status: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        },
+        '401': {
+          description: 'Não autenticado',
+        },
+      },
+    },
+  },
+  '/boletos/pagar': {
+    post: {
+      summary: 'Pagar boleto',
+      tags: ['Boletos'],
+      security: [{ BearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['boleto_id'],
+              properties: {
+                boleto_id: {
+                  type: 'string',
+                  example: 'boleto123',
+                },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        '200': {
+          description: 'Boleto pago com sucesso',
+        },
+        '400': {
+          description: 'Boleto inválido ou já pago',
+        },
+        '401': {
+          description: 'Não autenticado',
+        },
+      },
+    },
+  },
+  '/boletos/{id}': {
+    delete: {
+      summary: 'Cancelar boleto',
+      tags: ['Boletos'],
+      security: [{ BearerAuth: [] }],
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: {
+            type: 'string',
+          },
+          description: 'ID do boleto',
+        },
+      ],
+      responses: {
+        '200': {
+          description: 'Boleto cancelado com sucesso',
+        },
+        '401': {
+          description: 'Não autenticado',
+        },
+        '404': {
+          description: 'Boleto não encontrado',
         },
       },
     },

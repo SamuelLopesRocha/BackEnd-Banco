@@ -333,6 +333,86 @@ const options = {
             },
           },
         },
+        Boleto: {
+          type: 'object',
+          required: ['usuario_id', 'valor', 'vencimento'],
+          properties: {
+            _id: {
+              type: 'string',
+              example: '6507e8c9a1b234567890abd4',
+            },
+            usuario_id: {
+              type: 'string',
+              example: '6507e8c9a1b234567890abcd',
+            },
+            valor: {
+              type: 'number',
+              example: 150.00,
+            },
+            vencimento: {
+              type: 'string',
+              format: 'date',
+              example: '2025-12-31',
+            },
+            descricao: {
+              type: 'string',
+              example: 'Pagamento de conta',
+            },
+            codigo_barras: {
+              type: 'string',
+              example: '12345678901234567890123456789012345678901234',
+            },
+            status: {
+              type: 'string',
+              enum: ['pendente', 'pago', 'cancelado', 'vencido'],
+              example: 'pendente',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+            },
+          },
+        },
+        Cobranca: {
+          type: 'object',
+          required: ['usuario_id', 'valor', 'descricao', 'vencimento'],
+          properties: {
+            _id: {
+              type: 'string',
+              example: '6507e8c9a1b234567890abd5',
+            },
+            usuario_id: {
+              type: 'string',
+              example: '6507e8c9a1b234567890abcd',
+            },
+            valor: {
+              type: 'number',
+              example: 200.00,
+            },
+            descricao: {
+              type: 'string',
+              example: 'Cobrança de serviço',
+            },
+            vencimento: {
+              type: 'string',
+              format: 'date',
+              example: '2025-12-31',
+            },
+            codigo_cobranca: {
+              type: 'string',
+              example: 'COB123456',
+            },
+            status: {
+              type: 'string',
+              enum: ['pendente', 'paga', 'cancelada', 'vencida'],
+              example: 'pendente',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+            },
+          },
+        },
         Error: {
           type: 'object',
           properties: {

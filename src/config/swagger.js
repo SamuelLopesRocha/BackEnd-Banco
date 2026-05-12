@@ -7,7 +7,7 @@ const options = {
     info: {
       title: 'API Banco App',
       version: '1.0.0',
-      description: 'Documentação completa da API Banco App - Sistema bancário com contas, cartões, transações e PIX',
+      description: 'Documentacao da API Banco App - sistema bancario com usuarios, contas, cartoes, transacoes, PIX, faturas, cobrancas e boletos.',
       contact: {
         name: 'Suporte API',
         email: 'suporte@bancoapp.com',
@@ -16,11 +16,11 @@ const options = {
     servers: [
       {
         url: 'http://localhost:8000',
-        description: 'Servidor de Desenvolvimento',
+        description: 'Servidor de desenvolvimento',
       },
       {
         url: 'https://api.bancoapp.com',
-        description: 'Servidor de Produção',
+        description: 'Servidor de producao',
       },
     ],
     paths: swaggerPaths,
@@ -30,400 +30,166 @@ const options = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
-          description: 'Token JWT para autenticação',
+          description: 'Token JWT enviado no header Authorization no formato: Bearer {token}',
         },
       },
       schemas: {
         Usuario: {
           type: 'object',
-          required: ['nome_completo', 'cpf', 'data_nascimento', 'email', 'telefone', 'cidade', 'estado', 'cep', 'numero', 'senha'],
           properties: {
-            usuario_id: {
-              type: 'integer',
-              example: 42,
-            },
-            nome_completo: {
-              type: 'string',
-              example: 'João Silva',
-            },
-            cpf: {
-              type: 'string',
-              example: '12345678900',
-            },
-            data_nascimento: {
-              type: 'string',
-              format: 'date',
-              example: '1990-05-15',
-            },
-            email: {
-              type: 'string',
-              format: 'email',
-              example: 'joao@example.com',
-            },
-            telefone: {
-              type: 'string',
-              example: '11999999999',
-            },
-            cidade: {
-              type: 'string',
-              example: 'São Paulo',
-            },
-            estado: {
-              type: 'string',
-              example: 'SP',
-            },
-            cep: {
-              type: 'string',
-              example: '01310-100',
-            },
-            numero: {
-              type: 'string',
-              example: '123',
-            },
-            complemento: {
-              type: 'string',
-              example: 'Apartamento 101',
-            },
-            senha: {
-              type: 'string',
-              example: 'senha123',
-              writeOnly: true,
-            },
-            status_conta: {
-              type: 'string',
-              example: 'ATIVA',
-            },
-            email_enviado: {
-              type: 'boolean',
-              example: false,
-            },
-            createdAt: {
-              type: 'string',
-              format: 'date-time',
-            },
-            updatedAt: {
-              type: 'string',
-              format: 'date-time',
-            },
+            _id: { type: 'string', example: '6507e8c9a1b234567890abcd' },
+            usuario_id: { type: 'integer', example: 1 },
+            nome_completo: { type: 'string', example: 'Joao Silva' },
+            cpf: { type: 'string', example: '12345678909' },
+            data_nascimento: { type: 'string', format: 'date-time', example: '1990-05-15T00:00:00.000Z' },
+            email: { type: 'string', format: 'email', example: 'joao@example.com' },
+            telefone: { type: 'string', example: '11999999999' },
+            cidade: { type: 'string', example: 'Sao Paulo' },
+            estado: { type: 'string', example: 'SP' },
+            cep: { type: 'string', example: '01310-100' },
+            numero: { type: 'string', example: '123' },
+            complemento: { type: 'string', nullable: true, example: 'Apartamento 101' },
+            status_conta: { type: 'string', enum: ['ATIVA', 'INATIVA', 'BLOQUEADA', 'EXCLUIDA'], example: 'ATIVA' },
+            email_verificado: { type: 'boolean', example: true },
+            email_enviado: { type: 'boolean', example: false },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
           },
         },
         Conta: {
           type: 'object',
-          required: ['usuario_id', 'tipo'],
           properties: {
-            _id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abce',
-            },
-            usuario_id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abcd',
-            },
-            tipo: {
-              type: 'string',
-              enum: ['poupanca', 'corrente'],
-              example: 'poupanca',
-            },
-            saldo: {
-              type: 'number',
-              example: 1500.50,
-            },
-            numero_conta: {
-              type: 'string',
-              example: '123456-7',
-            },
-            agencia: {
-              type: 'string',
-              example: '0001',
-            },
-            createdAt: {
-              type: 'string',
-              format: 'date-time',
-            },
+            _id: { type: 'string', example: '6507e8c9a1b234567890abce' },
+            id_conta: { type: 'integer', example: 1 },
+            usuario_id: { type: 'integer', example: 1 },
+            agencia: { type: 'string', example: '0001' },
+            numero_conta: { type: 'string', example: '123456' },
+            digito: { type: 'string', example: '7' },
+            tipo_conta: { type: 'string', enum: ['CORRENTE', 'POUPANCA'], example: 'CORRENTE' },
+            saldo: { type: 'number', example: 1500.5 },
+            status_conta: { type: 'string', enum: ['ATIVA', 'BLOQUEADA', 'ENCERRADA'], example: 'ATIVA' },
+            limite_credito: { type: 'number', example: 200 },
+            limite_utilizado: { type: 'number', example: 0 },
+            taxa_manutencao: { type: 'number', example: 0 },
+            permite_cheque_especial: { type: 'boolean', example: true },
+            taxa_rendimento: { type: 'number', example: 0.005 },
+            rendimento_acumulado: { type: 'number', example: 0 },
+            aniversario_poupanca: { type: 'integer', nullable: true, example: 12 },
           },
         },
         Cartao: {
           type: 'object',
-          required: ['usuario_id', 'numero', 'bandeira'],
           properties: {
-            _id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abcf',
-            },
-            usuario_id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abcd',
-            },
-            numero: {
-              type: 'string',
-              example: '4532123456789012',
-            },
-            bandeira: {
-              type: 'string',
-              enum: ['VISA', 'MASTERCARD', 'ELO'],
-              example: 'VISA',
-            },
-            titular: {
-              type: 'string',
-              example: 'JOAO SILVA',
-            },
-            validade: {
-              type: 'string',
-              example: '12/26',
-            },
-            cvv: {
-              type: 'string',
-              example: '123',
-            },
-            limite: {
-              type: 'number',
-              example: 5000.00,
-            },
-            disponivel: {
-              type: 'number',
-              example: 5000.00,
-            },
-            bloqueado: {
-              type: 'boolean',
-              example: false,
-            },
-            createdAt: {
-              type: 'string',
-              format: 'date-time',
-            },
+            _id: { type: 'string', example: '6507e8c9a1b234567890abcf' },
+            id_cartao: { type: 'integer', example: 1 },
+            usuario_id: { type: 'integer', example: 1 },
+            conta_id: { type: 'string', example: '123456' },
+            numero_cartao: { type: 'string', example: '4532123456789012' },
+            nome_impresso: { type: 'string', example: 'JOAO SILVA' },
+            cvv: { type: 'string', example: '123' },
+            tipo: { type: 'string', enum: ['DEBITO', 'CREDITO', 'MULTIPLO'], example: 'MULTIPLO' },
+            bandeira: { type: 'string', enum: ['VISA', 'MASTERCARD', 'ELO'], example: 'VISA' },
+            limite_total: { type: 'number', example: 1000 },
+            limite_usado: { type: 'number', example: 250 },
+            limite_disponivel: { type: 'number', readOnly: true, example: 750 },
+            status_cartao: { type: 'string', enum: ['ATIVO', 'BLOQUEADO', 'CANCELADO'], example: 'ATIVO' },
+            data_emissao: { type: 'string', format: 'date-time' },
+            data_bloqueio: { type: 'string', format: 'date-time', nullable: true },
           },
         },
         Transacao: {
           type: 'object',
-          required: ['usuario_id', 'tipo', 'valor'],
           properties: {
-            _id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abd0',
-            },
-            usuario_id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abcd',
-            },
-            tipo: {
-              type: 'string',
-              enum: ['deposito', 'saque', 'pix'],
-              example: 'deposito',
-            },
-            valor: {
-              type: 'number',
-              example: 500.00,
-            },
-            descricao: {
-              type: 'string',
-              example: 'Depósito inicial',
-            },
-            status: {
-              type: 'string',
-              enum: ['pendente', 'concluida', 'falha'],
-              example: 'concluida',
-            },
-            data: {
-              type: 'string',
-              format: 'date-time',
-            },
+            _id: { type: 'string', example: '6507e8c9a1b234567890abd0' },
+            id_transacao: { type: 'integer', example: 1 },
+            usuario_id: { type: 'integer', example: 1 },
+            conta_origem: { type: 'string', example: '123456' },
+            conta_destino: { type: 'string', nullable: true, example: '654321' },
+            tipo: { type: 'string', enum: ['DEPOSITO', 'SAQUE', 'PIX_ENVIO', 'PIX_RECEBIMENTO', 'PAGAMENTO_BOLETO'], example: 'PIX_ENVIO' },
+            valor: { type: 'number', example: 150 },
+            saldo_antes: { type: 'number', example: 1000 },
+            saldo_depois: { type: 'number', example: 850 },
+            descricao: { type: 'string', nullable: true, example: 'Pagamento aluguel' },
+            chave_pix: { type: 'string', nullable: true, example: 'joao@example.com' },
+            tipo_chave_pix: { type: 'string', nullable: true, enum: ['CPF', 'EMAIL', 'TELEFONE', 'ALEATORIA', null], example: 'EMAIL' },
+            status: { type: 'string', enum: ['CONCLUIDA', 'FALHA'], example: 'CONCLUIDA' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
           },
         },
         Fatura: {
           type: 'object',
-          required: ['cartao_id', 'mes', 'ano'],
           properties: {
-            _id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abd1',
-            },
-            cartao_id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abcf',
-            },
-            mes: {
-              type: 'integer',
-              example: 12,
-            },
-            ano: {
-              type: 'integer',
-              example: 2025,
-            },
-            total: {
-              type: 'number',
-              example: 1200.50,
-            },
-            pago: {
-              type: 'boolean',
-              example: false,
-            },
-            data_vencimento: {
-              type: 'string',
-              format: 'date-time',
-            },
-            data_fechamento: {
-              type: 'string',
-              format: 'date-time',
-            },
+            _id: { type: 'string', example: '6507e8c9a1b234567890abd1' },
+            id_fatura: { type: 'integer', example: 1 },
+            cartao_id: { type: 'integer', example: 1 },
+            conta_id: { type: 'integer', example: 1 },
+            mes_referencia: { type: 'string', example: '2026-09' },
+            valor_total: { type: 'number', example: 1200.5 },
+            data_fechamento: { type: 'string', format: 'date-time' },
+            data_vencimento: { type: 'string', format: 'date-time' },
+            status_fatura: { type: 'string', enum: ['ABERTA', 'FECHADA', 'PAGA', 'ATRASADA'], example: 'ABERTA' },
+            data_pagamento: { type: 'string', format: 'date-time', nullable: true },
           },
         },
         ChavePix: {
           type: 'object',
-          required: ['usuario_id', 'tipo_chave', 'chave'],
           properties: {
-            _id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abd2',
-            },
-            usuario_id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abcd',
-            },
-            tipo_chave: {
-              type: 'string',
-              enum: ['cpf', 'email', 'telefone', 'chave_aleatoria'],
-              example: 'cpf',
-            },
-            chave: {
-              type: 'string',
-              example: '12345678900',
-            },
-            createdAt: {
-              type: 'string',
-              format: 'date-time',
-            },
+            _id: { type: 'string', example: '6507e8c9a1b234567890abd2' },
+            chave: { type: 'string', example: 'joao@example.com' },
+            tipo_chave: { type: 'string', enum: ['CPF', 'EMAIL', 'TELEFONE', 'ALEATORIA'], example: 'EMAIL' },
+            numero_conta: { type: 'string', example: '123456' },
+            usuario_id: { type: 'integer', example: 1 },
+            createdAt: { type: 'string', format: 'date-time' },
           },
         },
         CompraCartao: {
           type: 'object',
-          required: ['usuario_id', 'cartao_id', 'valor'],
           properties: {
-            _id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abd3',
-            },
-            usuario_id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abcd',
-            },
-            cartao_id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abcf',
-            },
-            valor: {
-              type: 'number',
-              example: 299.99,
-            },
-            descricao: {
-              type: 'string',
-              example: 'Compra no supermercado',
-            },
-            local: {
-              type: 'string',
-              example: 'Supermercado XYZ',
-            },
-            status: {
-              type: 'string',
-              enum: ['pendente', 'confirmada', 'cancelada'],
-              example: 'confirmada',
-            },
-            data: {
-              type: 'string',
-              format: 'date-time',
-            },
+            _id: { type: 'string', example: '6507e8c9a1b234567890abd3' },
+            id_compra: { type: 'integer', example: 1 },
+            usuario_id: { type: 'integer', example: 1 },
+            cartao_id: { type: 'string', example: '6507e8c9a1b234567890abcf' },
+            valor_total: { type: 'number', example: 299.99 },
+            valor_parcela: { type: 'number', example: 299.99 },
+            quantidade_parcelas: { type: 'integer', example: 1 },
+            parcela_atual: { type: 'integer', example: 1 },
+            descricao: { type: 'string', example: 'Compra no supermercado' },
+            data_compra: { type: 'string', format: 'date-time' },
+            status_compra: { type: 'string', enum: ['ATIVA', 'CANCELADA', 'ESTORNADA'], example: 'ATIVA' },
+            fatura_id: { type: 'string', nullable: true, example: '6507e8c9a1b234567890abd1' },
+            recorrente: { type: 'boolean', example: false },
+            codigo_autorizacao: { type: 'string', example: 'AUT123456' },
           },
         },
         Boleto: {
           type: 'object',
-          required: ['usuario_id', 'valor', 'vencimento'],
           properties: {
-            _id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abd4',
-            },
-            usuario_id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abcd',
-            },
-            valor: {
-              type: 'number',
-              example: 150.00,
-            },
-            vencimento: {
-              type: 'string',
-              format: 'date',
-              example: '2025-12-31',
-            },
-            descricao: {
-              type: 'string',
-              example: 'Pagamento de conta',
-            },
-            codigo_barras: {
-              type: 'string',
-              example: '12345678901234567890123456789012345678901234',
-            },
-            status: {
-              type: 'string',
-              enum: ['pendente', 'pago', 'cancelado', 'vencido'],
-              example: 'pendente',
-            },
-            createdAt: {
-              type: 'string',
-              format: 'date-time',
-            },
+            _id: { type: 'string', example: '6507e8c9a1b234567890abd4' },
+            usuario_id: { type: 'integer', example: 1 },
+            conta_id: { type: 'string', example: '123456' },
+            valor: { type: 'number', example: 150 },
+            linha_digitavel: { type: 'string', example: '34191.09008 63391.234567 89101.12345 1 00000000012345' },
+            codigo_barras: { type: 'string', example: '34191000000000123456339123456789101' },
+            vencimento: { type: 'string', format: 'date-time' },
+            status: { type: 'string', enum: ['PENDENTE', 'PAGO', 'CANCELADO'], example: 'PENDENTE' },
           },
         },
         Cobranca: {
           type: 'object',
-          required: ['usuario_id', 'valor', 'descricao', 'vencimento'],
           properties: {
-            _id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abd5',
-            },
-            usuario_id: {
-              type: 'string',
-              example: '6507e8c9a1b234567890abcd',
-            },
-            valor: {
-              type: 'number',
-              example: 200.00,
-            },
-            descricao: {
-              type: 'string',
-              example: 'Cobrança de serviço',
-            },
-            vencimento: {
-              type: 'string',
-              format: 'date',
-              example: '2025-12-31',
-            },
-            codigo_cobranca: {
-              type: 'string',
-              example: 'COB123456',
-            },
-            status: {
-              type: 'string',
-              enum: ['pendente', 'paga', 'cancelada', 'vencida'],
-              example: 'pendente',
-            },
-            createdAt: {
-              type: 'string',
-              format: 'date-time',
-            },
+            _id: { type: 'string', example: '6507e8c9a1b234567890abd5' },
+            usuario_id: { type: 'integer', example: 1 },
+            valor: { type: 'number', example: 200 },
+            codigo_pix: { type: 'string', example: 'PIX-COB-123456' },
+            tipo: { type: 'string', example: 'PIX' },
+            status: { type: 'string', example: 'PENDENTE' },
           },
         },
         Error: {
           type: 'object',
           properties: {
-            message: {
-              type: 'string',
-              example: 'Erro ao processar requisição',
-            },
-            status: {
-              type: 'integer',
-              example: 400,
-            },
+            error: { type: 'string', example: 'Erro ao processar requisicao.' },
           },
         },
       },

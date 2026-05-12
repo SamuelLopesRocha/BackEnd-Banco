@@ -1,44 +1,93 @@
+const errorResponse = {
+  description: 'Erro na requisicao',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/Error' },
+    },
+  },
+};
+
+const authErrorResponses = {
+  401: {
+    description: 'Token ausente, invalido ou expirado',
+    content: {
+      'application/json': {
+        schema: { $ref: '#/components/schemas/Error' },
+      },
+    },
+  },
+};
+
 export const swaggerPaths = {
-  '/usuarios/verificar-email': {
-    get: {
-      summary: 'Verificar e-mail do usuário',
-      description: 'Ativa a conta do usuário a partir do token recebido no e-mail de verificação.',
-      tags: ['Usuários'],
-      parameters: [
-        {
-          name: 'token',
-          in: 'query',
-          required: true,
-          description: 'Token de verificação enviado por e-mail',
-          schema: {
-            type: 'string',
-            example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-          },
-        },
-      ],
-      responses: {
-        '200': {
-          description: 'E-mail verificado com sucesso. Conta ativada.',
-          content: {
-            'application/json': {
-              example: { message: 'E-mail verificado com sucesso! A conta está ativa!' },
+  '/usuarios': {
+    post: {
+      summary: 'Criar novo usuario',
+      tags: ['Usuarios'],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['nome_completo', 'cpf', 'data_nascimento', 'email', 'telefone', 'cidade', 'estado', 'cep', 'numero', 'senha'],
+              properties: {
+                nome_completo: { type: 'string', example: 'Joao Silva' },
+                cpf: { type: 'string', example: '12345678909' },
+                data_nascimento: { type: 'string', format: 'date', example: '1990-05-15' },
+                email: { type: 'string', format: 'email', example: 'joao@example.com' },
+                telefone: { type: 'string', example: '11999999999' },
+                cidade: { type: 'string', example: 'Sao Paulo' },
+                estado: { type: 'string', example: 'SP' },
+                cep: { type: 'string', example: '01310-100' },
+                numero: { type: 'string', example: '123' },
+                complemento: { type: 'string', example: 'Apto 101' },
+                senha: { type: 'string', format: 'password', example: 'senha123' },
+              },
             },
           },
         },
-        '400': {
-          description: 'Token não informado.',
+      },
+      responses: {
+        201: {
+          description: 'Usuario criado com sucesso',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string', example: 'Usuario criado com sucesso! O codigo de ativacao chegara no seu e-mail em instantes.' },
+                },
+              },
+            },
+          },
         },
-        '404': {
-          description: 'Token inválido ou já utilizado.',
+        400: errorResponse,
+        500: errorResponse,
+      },
+    },
+    get: {
+      summary: 'Listar usuarios ativos ou nao excluidos',
+      tags: ['Usuarios'],
+      responses: {
+        200: {
+          description: 'Lista de usuarios',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/Usuario' },
+              },
+            },
+          },
         },
+        500: errorResponse,
       },
     },
   },
   '/usuarios/verificar-codigo': {
     post: {
-      summary: 'Verificar código de ativação',
-      description: 'Ativa a conta do usuário usando o código enviado por e-mail.',
-      tags: ['Usuários'],
+      summary: 'Verificar codigo de ativacao',
+      tags: ['Usuarios'],
       requestBody: {
         required: true,
         content: {
@@ -47,40 +96,37 @@ export const swaggerPaths = {
               type: 'object',
               required: ['email', 'codigo'],
               properties: {
-                email: {
-                  type: 'string',
-                  format: 'email',
-                  example: 'joao@example.com',
-                },
-                codigo: {
-                  type: 'string',
-                  example: '123456',
-                },
+                email: { type: 'string', format: 'email', example: 'joao@example.com' },
+                codigo: { type: 'string', example: '123456' },
               },
             },
           },
         },
       },
       responses: {
-        '200': {
-          description: 'Conta ativada com sucesso',
+        200: {
+          description: 'Conta verificada com sucesso',
           content: {
             'application/json': {
-              example: { message: 'Conta ativada com sucesso!' },
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string', example: 'Conta verificada com sucesso!' },
+                },
+              },
             },
           },
         },
-        '400': {
-          description: 'Código inválido ou expirado',
-        },
+        400: errorResponse,
+        404: errorResponse,
+        500: errorResponse,
       },
     },
   },
   '/usuarios/reenviar-codigo': {
     post: {
-      summary: 'Reenviar código de ativação',
-      description: 'Reenvia o código de ativação para o e-mail do usuário.',
-      tags: ['Usuários'],
+      summary: 'Reenviar codigo de ativacao',
+      tags: ['Usuarios'],
       requestBody: {
         required: true,
         content: {
@@ -89,273 +135,194 @@ export const swaggerPaths = {
               type: 'object',
               required: ['email'],
               properties: {
-                email: {
-                  type: 'string',
-                  format: 'email',
-                  example: 'joao@example.com',
+                email: { type: 'string', format: 'email', example: 'joao@example.com' },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: 'Codigo gerado novamente',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string', example: 'Novo codigo gerado. O e-mail chegara em instantes.' },
                 },
               },
             },
           },
         },
-      },
-      responses: {
-        '200': {
-          description: 'Código reenviado com sucesso',
-          content: {
-            'application/json': {
-              example: { message: 'Código reenviado para o e-mail!' },
-            },
-          },
-        },
-        '404': {
-          description: 'Usuário não encontrado',
-        },
-      },
-    },
-  },
-  '/usuarios': {
-    post: {
-      summary: 'Criar novo usuário',
-      tags: ['Usuários'],
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              $ref: '#/components/schemas/Usuario',
-            },
-            example: {
-              nome_completo: 'João Silva',
-              cpf: '12345678900',
-              data_nascimento: '1990-05-15',
-              email: 'joao@example.com',
-              telefone: '11999999999',
-              cidade: 'São Paulo',
-              estado: 'SP',
-              cep: '01310-100',
-              numero: '123',
-              complemento: 'Apto 101',
-              senha: 'senha123',
-            },
-          },
-        },
-      },
-      responses: {
-        '201': {
-          description: 'Usuário criado com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Usuario',
-              },
-            },
-          },
-        },
-        '400': {
-          description: 'Dados inválidos',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Error',
-              },
-            },
-          },
-        },
-      },
-    },
-    get: {
-      summary: 'Listar todos os usuários',
-      tags: ['Usuários'],
-      responses: {
-        '200': {
-          description: 'Lista de usuários',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'array',
-                items: {
-                  $ref: '#/components/schemas/Usuario',
-                },
-              },
-            },
-          },
-        },
+        400: errorResponse,
+        404: errorResponse,
+        500: errorResponse,
       },
     },
   },
   '/usuarios/meus-dados': {
     get: {
-      summary: 'Obter dados do usuário autenticado',
-      tags: ['Usuários'],
+      summary: 'Obter dados do usuario autenticado',
+      tags: ['Usuarios'],
       security: [{ BearerAuth: [] }],
       responses: {
-        '200': {
-          description: 'Dados do usuário',
+        200: {
+          description: 'Dados do usuario com informacoes da conta e chaves PIX',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/Usuario',
+                allOf: [
+                  { $ref: '#/components/schemas/Usuario' },
+                  {
+                    type: 'object',
+                    properties: {
+                      saldo_disponivel: { type: 'number', example: 1000 },
+                      saldo_poupanca: { type: 'number', example: 0 },
+                      tipo_conta: { type: 'string', example: 'CORRENTE' },
+                      numero_conta: { type: 'string', nullable: true, example: '123456' },
+                      chaves_pix: { type: 'array', items: { type: 'string' } },
+                    },
+                  },
+                ],
               },
             },
           },
         },
-        '401': {
-          description: 'Não autenticado',
-        },
+        ...authErrorResponses,
+        404: errorResponse,
+        500: errorResponse,
       },
     },
   },
   '/usuarios/{id}': {
     get: {
-      summary: 'Obter usuário por ID',
-      tags: ['Usuários'],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do usuário',
-        },
-      ],
+      summary: 'Buscar usuario por usuario_id',
+      tags: ['Usuarios'],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
       responses: {
-        '200': {
-          description: 'Dados do usuário',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Usuario',
-              },
-            },
-          },
+        200: {
+          description: 'Usuario encontrado',
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/Usuario' } } },
         },
-        '404': {
-          description: 'Usuário não encontrado',
-        },
+        404: errorResponse,
+        500: errorResponse,
       },
     },
     put: {
-      summary: 'Atualizar usuário',
-      tags: ['Usuários'],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do usuário',
-        },
-      ],
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              $ref: '#/components/schemas/Usuario',
-            },
-          },
-        },
-      },
-      responses: {
-        '200': {
-          description: 'Usuário atualizado',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Usuario',
-              },
-            },
-          },
-        },
-        '404': {
-          description: 'Usuário não encontrado',
-        },
-      },
-    },
-    delete: {
-      summary: 'Deletar usuário',
-      tags: ['Usuários'],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do usuário',
-        },
-      ],
-      responses: {
-        '200': {
-          description: 'Usuário deletado com sucesso',
-        },
-        '404': {
-          description: 'Usuário não encontrado',
-        },
-      },
-    },
-  },
-  '/auth/login': {
-    post: {
-      summary: 'Fazer login',
-      tags: ['Autenticação'],
+      summary: 'Atualizar dados editaveis do usuario',
+      tags: ['Usuarios'],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
       requestBody: {
         required: true,
         content: {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['email', 'senha'],
               properties: {
-                email: {
-                  type: 'string',
-                  format: 'email',
-                  example: 'joao@example.com',
-                },
-                senha: {
-                  type: 'string',
-                  example: 'senha123',
-                },
+                nome_completo: { type: 'string', example: 'Joao Silva' },
+                senha: { type: 'string', format: 'password', example: 'novaSenha123' },
+                telefone: { type: 'string', example: '11999999999' },
+                cidade: { type: 'string', example: 'Sao Paulo' },
+                estado: { type: 'string', example: 'SP' },
+                cep: { type: 'string', example: '01310-100' },
+                numero: { type: 'string', example: '123' },
               },
             },
           },
         },
       },
       responses: {
-        '200': {
-          description: 'Login bem-sucedido',
+        200: {
+          description: 'Usuario atualizado',
           content: {
             'application/json': {
               schema: {
                 type: 'object',
                 properties: {
-                  token: {
-                    type: 'string',
-                    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-                  },
-                  usuario: {
-                    $ref: '#/components/schemas/Usuario',
-                  },
+                  message: { type: 'string' },
+                  usuario: { $ref: '#/components/schemas/Usuario' },
                 },
               },
             },
           },
         },
-        '401': {
-          description: 'Email ou senha inválidos',
+        400: errorResponse,
+        404: errorResponse,
+        500: errorResponse,
+      },
+    },
+    delete: {
+      summary: 'Desativar usuario',
+      tags: ['Usuarios'],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+      responses: {
+        200: {
+          description: 'Usuario desativado',
+          content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' } } } } },
         },
+        404: errorResponse,
+        500: errorResponse,
+      },
+    },
+  },
+  '/auth/login': {
+    post: {
+      summary: 'Fazer login com email ou CPF',
+      tags: ['Autenticacao'],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['senha'],
+              properties: {
+                login: { type: 'string', description: 'Email ou CPF do usuario', example: 'joao@example.com' },
+                email: { type: 'string', format: 'email', description: 'Alternativa ao campo login', example: 'joao@example.com' },
+                senha: { type: 'string', format: 'password', example: 'senha123' },
+              },
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: 'Login realizado com sucesso',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                  token: { type: 'string' },
+                  usuario: {
+                    type: 'object',
+                    properties: {
+                      usuario_id: { type: 'integer' },
+                      nome_completo: { type: 'string' },
+                      cpf: { type: 'string' },
+                      email: { type: 'string' },
+                      status_conta: { type: 'string' },
+                    },
+                  },
+                  conta: { $ref: '#/components/schemas/Conta' },
+                },
+              },
+            },
+          },
+        },
+        400: errorResponse,
+        401: errorResponse,
+        403: errorResponse,
+        404: errorResponse,
+        500: errorResponse,
       },
     },
   },
   '/contas/poupanca': {
     post: {
-      summary: 'Criar conta poupança',
+      summary: 'Criar conta poupanca',
       tags: ['Contas'],
       requestBody: {
         required: true,
@@ -365,121 +332,63 @@ export const swaggerPaths = {
               type: 'object',
               required: ['usuario_id'],
               properties: {
-                usuario_id: {
-                  type: 'string',
-                  example: '6507e8c9a1b234567890abcd',
-                },
+                usuario_id: { type: 'integer', example: 1 },
               },
             },
           },
         },
       },
       responses: {
-        '201': {
-          description: 'Conta poupança criada com sucesso',
+        201: {
+          description: 'Conta poupanca criada',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/Conta',
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                  conta: { $ref: '#/components/schemas/Conta' },
+                },
               },
             },
           },
         },
-        '400': {
-          description: 'Dados inválidos',
-        },
+        400: errorResponse,
+        404: errorResponse,
+        500: errorResponse,
       },
     },
   },
   '/contas/{usuario_id}': {
     get: {
-      summary: 'Listar contas do usuário',
+      summary: 'Listar contas de um usuario',
       tags: ['Contas'],
-      parameters: [
-        {
-          name: 'usuario_id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do usuário',
-        },
-      ],
+      parameters: [{ name: 'usuario_id', in: 'path', required: true, schema: { type: 'integer' } }],
       responses: {
-        '200': {
-          description: 'Lista de contas do usuário',
+        200: {
+          description: 'Contas do usuario',
           content: {
             'application/json': {
               schema: {
-                type: 'array',
-                items: {
-                  $ref: '#/components/schemas/Conta',
+                type: 'object',
+                properties: {
+                  usuario_id: { type: 'string' },
+                  total_contas: { type: 'integer' },
+                  contas: { type: 'array', items: { $ref: '#/components/schemas/Conta' } },
                 },
               },
             },
           },
         },
-        '404': {
-          description: 'Usuário não encontrado',
-        },
+        404: errorResponse,
+        500: errorResponse,
       },
     },
   },
   '/transacoes/deposito': {
     post: {
-      summary: 'Realizar depósito',
-      tags: ['Transações'],
-      security: [{ BearerAuth: [] }],
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              required: ['conta_origem', 'valor', 'descricao'],
-              properties: {
-                conta_origem: {
-                  type: 'string',
-                  example: '123456-7',
-                },
-                valor: {
-                  type: 'number',
-                  example: 500.00,
-                },
-                descricao: {
-                  type: 'string',
-                  example: 'Depósito inicial',
-                },
-              },
-            },
-          },
-        },
-      },
-      responses: {
-        '201': {
-          description: 'Depósito realizado com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Transacao',
-              },
-            },
-          },
-        },
-        '400': {
-          description: 'Valores inválidos',
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-      },
-    },
-  },
-  '/transacoes/saque': {
-    post: {
-      summary: 'Realizar saque',
-      tags: ['Transações'],
+      summary: 'Realizar deposito na conta do usuario autenticado',
+      tags: ['Transacoes'],
       security: [{ BearerAuth: [] }],
       requestBody: {
         required: true,
@@ -489,39 +398,51 @@ export const swaggerPaths = {
               type: 'object',
               required: ['valor'],
               properties: {
-                valor: {
-                  type: 'number',
-                  example: 200.00,
-                },
+                valor: { type: 'number', example: 500 },
+                descricao: { type: 'string', maxLength: 200, example: 'Deposito inicial' },
               },
             },
           },
         },
       },
       responses: {
-        '201': {
-          description: 'Saque realizado com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Transacao',
+        201: { description: 'Deposito realizado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Transacao' } } } },
+        ...authErrorResponses,
+        400: errorResponse,
+      },
+    },
+  },
+  '/transacoes/saque': {
+    post: {
+      summary: 'Realizar saque da conta do usuario autenticado',
+      tags: ['Transacoes'],
+      security: [{ BearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['valor'],
+              properties: {
+                valor: { type: 'number', example: 200 },
+                descricao: { type: 'string', maxLength: 200, example: 'Saque' },
               },
             },
           },
         },
-        '400': {
-          description: 'Saldo insuficiente',
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
+      },
+      responses: {
+        201: { description: 'Saque realizado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Transacao' } } } },
+        ...authErrorResponses,
+        400: errorResponse,
       },
     },
   },
   '/transacoes/pix': {
     post: {
-      summary: 'Realizar transferência PIX',
-      tags: ['Transações'],
+      summary: 'Realizar transferencia PIX',
+      tags: ['Transacoes'],
       security: [{ BearerAuth: [] }],
       requestBody: {
         required: true,
@@ -529,413 +450,202 @@ export const swaggerPaths = {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['valor', 'chave'],
+              required: ['chave', 'valor'],
               properties: {
-                valor: {
-                  type: 'number',
-                  example: 150.00,
-                },
-                chave: {
-                  type: 'string',
-                  example: 'nic.macedo2020@gmail.com',
-                },
-                descricao: {
-                  type: 'string',
-                  example: 'Pagamento aluguel',
-                },
+                chave: { type: 'string', example: 'joao@example.com' },
+                valor: { type: 'number', example: 150 },
+                descricao: { type: 'string', example: 'Pagamento aluguel' },
+                codigo_pix: { type: 'string', description: 'Codigo de cobranca PIX opcional para baixa de cobranca pendente', example: 'PIX-COB-123456' },
               },
             },
           },
         },
       },
       responses: {
-        '201': {
-          description: 'PIX realizado com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Transacao',
-              },
-            },
-          },
-        },
-        '400': {
-          description: 'Dados inválidos',
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-      },
-    },
-  },
-  '/transacoes': {
-    get: {
-      summary: 'Listar minhas transações',
-      tags: ['Transações'],
-      security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'page',
-          in: 'query',
-          required: false,
-          schema: {
-            type: 'integer',
-            default: 1,
-          },
-          description: 'Página da listagem',
-        },
-        {
-          name: 'limit',
-          in: 'query',
-          required: false,
-          schema: {
-            type: 'integer',
-            default: 10,
-          },
-          description: 'Número de itens por página',
-        },
-      ],
-      responses: {
-        '200': {
-          description: 'Lista de transações do usuário',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'array',
-                items: {
-                  $ref: '#/components/schemas/Transacao',
-                },
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-      },
-    },
-  },
-  '/cartoes': {
-    post: {
-      summary: 'Criar novo cartão',
-      tags: ['Cartões'],
-      security: [{ BearerAuth: [] }],
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              required: ['numero', 'bandeira', 'titular', 'validade', 'cvv'],
-              properties: {
-                numero: {
-                  type: 'string',
-                  example: '4532123456789012',
-                },
-                bandeira: {
-                  type: 'string',
-                  enum: ['VISA', 'MASTERCARD', 'ELO'],
-                  example: 'VISA',
-                },
-                titular: {
-                  type: 'string',
-                  example: 'JOAO SILVA',
-                },
-                validade: {
-                  type: 'string',
-                  example: '12/26',
-                },
-                cvv: {
-                  type: 'string',
-                  example: '123',
-                },
-                limite: {
-                  type: 'number',
-                  example: 5000.00,
-                },
-              },
-            },
-          },
-        },
-      },
-      responses: {
-        '201': {
-          description: 'Cartão criado com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Cartao',
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-      },
-    },
-  },
-  '/cartoes/meus': {
-    get: {
-      summary: 'Listar meus cartões',
-      tags: ['Cartões'],
-      security: [{ BearerAuth: [] }],
-      responses: {
-        '200': {
-          description: 'Lista de cartões do usuário',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'array',
-                items: {
-                  $ref: '#/components/schemas/Cartao',
-                },
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-      },
-    },
-  },
-  '/cartoes/{id}': {
-    get: {
-      summary: 'Obter cartão por ID',
-      tags: ['Cartões'],
-      security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do cartão',
-        },
-      ],
-      responses: {
-        '200': {
-          description: 'Dados do cartão',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Cartao',
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-        '404': {
-          description: 'Cartão não encontrado',
-        },
-      },
-    },
-    delete: {
-      summary: 'Deletar cartão',
-      tags: ['Cartões'],
-      security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do cartão',
-        },
-      ],
-      responses: {
-        '200': {
-          description: 'Cartão deletado com sucesso',
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-        '404': {
-          description: 'Cartão não encontrado',
-        },
-      },
-    },
-  },
-  '/cartoes/{id}/bloquear': {
-    patch: {
-      summary: 'Bloquear cartão',
-      tags: ['Cartões'],
-      security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do cartão',
-        },
-      ],
-      responses: {
-        '200': {
-          description: 'Cartão bloqueado com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Cartao',
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-        '404': {
-          description: 'Cartão não encontrado',
-        },
-      },
-    },
-  },
-  '/cartoes/{id}/desbloquear': {
-    patch: {
-      summary: 'Desbloquear cartão',
-      tags: ['Cartões'],
-      security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do cartão',
-        },
-      ],
-      responses: {
-        '200': {
-          description: 'Cartão desbloqueado com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Cartao',
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-        '404': {
-          description: 'Cartão não encontrado',
-        },
-      },
-    },
-  },
-  '/cartoes/{id}/limite': {
-    patch: {
-      summary: 'Alterar limite do cartão',
-      tags: ['Cartões'],
-      security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do cartão',
-        },
-      ],
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              required: ['novo_limite'],
-              properties: {
-                novo_limite: {
-                  type: 'number',
-                  example: 10000.00,
-                },
-              },
-            },
-          },
-        },
-      },
-      responses: {
-        '200': {
-          description: 'Limite alterado com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Cartao',
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-        '404': {
-          description: 'Cartão não encontrado',
-        },
-      },
-    },
-    get: {
-      summary: 'Consultar limite do cartão',
-      tags: ['Cartões'],
-      security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do cartão',
-        },
-      ],
-      responses: {
-        '200': {
-          description: 'Limite do cartão',
+        201: {
+          description: 'PIX realizado',
           content: {
             'application/json': {
               schema: {
                 type: 'object',
                 properties: {
-                  limite: {
-                    type: 'number',
-                    example: 5000.00,
-                  },
-                  disponivel: {
-                    type: 'number',
-                    example: 3500.00,
-                  },
+                  message: { type: 'string' },
+                  destinatario_id: { type: 'integer' },
+                  valor: { type: 'number' },
+                  conta_origem: { type: 'string' },
                 },
               },
             },
           },
         },
-        '401': {
-          description: 'Não autenticado',
+        ...authErrorResponses,
+        400: errorResponse,
+      },
+    },
+  },
+  '/transacoes': {
+    get: {
+      summary: 'Listar transacoes do usuario autenticado',
+      tags: ['Transacoes'],
+      security: [{ BearerAuth: [] }],
+      parameters: [
+        { name: 'page', in: 'query', required: false, schema: { type: 'integer', default: 1 } },
+        { name: 'limit', in: 'query', required: false, schema: { type: 'integer', default: 10, maximum: 100 } },
+      ],
+      responses: {
+        200: {
+          description: 'Transacoes paginadas',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  pagina: { type: 'integer' },
+                  limite: { type: 'integer' },
+                  total: { type: 'integer' },
+                  total_paginas: { type: 'integer' },
+                  dados: { type: 'array', items: { $ref: '#/components/schemas/Transacao' } },
+                },
+              },
+            },
+          },
         },
-        '404': {
-          description: 'Cartão não encontrado',
+        ...authErrorResponses,
+        500: errorResponse,
+      },
+    },
+  },
+  '/cartoes': {
+    post: {
+      summary: 'Criar cartao para o usuario autenticado',
+      tags: ['Cartoes'],
+      security: [{ BearerAuth: [] }],
+      description: 'O cartao e criado automaticamente a partir da conta do usuario autenticado. O corpo da requisicao nao e utilizado.',
+      responses: {
+        201: { description: 'Cartao criado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Cartao' } } } },
+        ...authErrorResponses,
+        400: errorResponse,
+      },
+    },
+  },
+  '/cartoes/meus': {
+    get: {
+      summary: 'Listar cartoes do usuario autenticado',
+      tags: ['Cartoes'],
+      security: [{ BearerAuth: [] }],
+      responses: {
+        200: { description: 'Lista de cartoes', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Cartao' } } } } },
+        ...authErrorResponses,
+        500: errorResponse,
+      },
+    },
+  },
+  '/cartoes/{id}': {
+    get: {
+      summary: 'Buscar cartao por _id',
+      tags: ['Cartoes'],
+      security: [{ BearerAuth: [] }],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Cartao encontrado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Cartao' } } } },
+        ...authErrorResponses,
+        404: errorResponse,
+      },
+    },
+    delete: {
+      summary: 'Deletar cartao por _id',
+      tags: ['Cartoes'],
+      security: [{ BearerAuth: [] }],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Cartao deletado', content: { 'application/json': { schema: { type: 'object', properties: { mensagem: { type: 'string' } } } } } },
+        ...authErrorResponses,
+        404: errorResponse,
+      },
+    },
+  },
+  '/cartoes/{id}/bloquear': {
+    patch: {
+      summary: 'Bloquear cartao',
+      tags: ['Cartoes'],
+      security: [{ BearerAuth: [] }],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Cartao bloqueado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Cartao' } } } },
+        ...authErrorResponses,
+        400: errorResponse,
+      },
+    },
+  },
+  '/cartoes/{id}/desbloquear': {
+    patch: {
+      summary: 'Desbloquear cartao',
+      tags: ['Cartoes'],
+      security: [{ BearerAuth: [] }],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: { description: 'Cartao desbloqueado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Cartao' } } } },
+        ...authErrorResponses,
+        400: errorResponse,
+      },
+    },
+  },
+  '/cartoes/{id}/limite': {
+    patch: {
+      summary: 'Alterar limite do cartao',
+      tags: ['Cartoes'],
+      security: [{ BearerAuth: [] }],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['novoLimite'],
+              properties: {
+                novoLimite: { type: 'number', example: 2500 },
+              },
+            },
+          },
         },
+      },
+      responses: {
+        200: { description: 'Limite alterado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Cartao' } } } },
+        ...authErrorResponses,
+        400: errorResponse,
+      },
+    },
+    get: {
+      summary: 'Consultar limite do cartao',
+      tags: ['Cartoes'],
+      security: [{ BearerAuth: [] }],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      responses: {
+        200: {
+          description: 'Limite do cartao',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  limite_total: { type: 'number' },
+                  limite_usado: { type: 'number' },
+                  limite_disponivel: { type: 'number' },
+                },
+              },
+            },
+          },
+        },
+        ...authErrorResponses,
+        400: errorResponse,
       },
     },
   },
   '/compras-cartao': {
     post: {
-      summary: 'Realizar compra com cartão',
-      tags: ['Compras com Cartão'],
+      summary: 'Realizar compra com cartao',
+      tags: ['Compras com Cartao'],
       security: [{ BearerAuth: [] }],
       requestBody: {
         required: true,
@@ -945,157 +655,61 @@ export const swaggerPaths = {
               type: 'object',
               required: ['numero_cartao', 'cvv', 'valor_total', 'descricao'],
               properties: {
-                numero_cartao: {
-                  type: 'string',
-                  example: '4111111111111111',
-                },
-                cvv: {
-                  type: 'string',
-                  example: '123',
-                },
-                valor_total: {
-                  type: 'number',
-                  example: 299.99,
-                },
-                quantidade_parcelas: {
-                  type: 'integer',
-                  example: 1,
-                  default: 1,
-                },
-                descricao: {
-                  type: 'string',
-                  example: 'Compra no supermercado',
-                },
+                numero_cartao: { type: 'string', example: '4111111111111111' },
+                cvv: { type: 'string', example: '123' },
+                valor_total: { type: 'number', example: 299.99 },
+                quantidade_parcelas: { type: 'integer', default: 1, example: 1 },
+                descricao: { type: 'string', example: 'Compra no supermercado' },
               },
-            },
-            example: {
-              numero_cartao: '4111111111111111',
-              cvv: '123',
-              valor_total: 299.99,
-              quantidade_parcelas: 1,
-              descricao: 'Compra no supermercado',
             },
           },
         },
       },
       responses: {
-        '201': {
-          description: 'Compra realizada com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/CompraCartao',
-              },
-            },
-          },
-        },
-        '400': {
-          description: 'Limite insuficiente',
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
+        201: { description: 'Compra realizada', content: { 'application/json': { schema: { $ref: '#/components/schemas/CompraCartao' } } } },
+        ...authErrorResponses,
+        400: errorResponse,
       },
     },
     get: {
-      summary: 'Listar minhas compras com cartão',
-      tags: ['Compras com Cartão'],
+      summary: 'Listar compras com cartao do usuario autenticado',
+      tags: ['Compras com Cartao'],
       security: [{ BearerAuth: [] }],
       responses: {
-        '200': {
-          description: 'Lista de compras com cartão',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'array',
-                items: {
-                  $ref: '#/components/schemas/CompraCartao',
-                },
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
+        200: { description: 'Lista de compras', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/CompraCartao' } } } } },
+        ...authErrorResponses,
       },
     },
   },
   '/compras-cartao/{id}': {
     get: {
-      summary: 'Obter compra por ID',
-      tags: ['Compras com Cartão'],
+      summary: 'Buscar compra por id_compra',
+      tags: ['Compras com Cartao'],
       security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID da compra',
-        },
-      ],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
       responses: {
-        '200': {
-          description: 'Dados da compra',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/CompraCartao',
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-        '404': {
-          description: 'Compra não encontrada',
-        },
+        200: { description: 'Compra encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/CompraCartao' } } } },
+        ...authErrorResponses,
+        404: errorResponse,
       },
     },
   },
   '/compras-cartao/{id}/cancelar': {
     patch: {
-      summary: 'Cancelar compra com cartão',
-      tags: ['Compras com Cartão'],
+      summary: 'Cancelar compra por id_compra',
+      tags: ['Compras com Cartao'],
       security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID da compra',
-        },
-      ],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
       responses: {
-        '200': {
-          description: 'Compra cancelada com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/CompraCartao',
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-        '404': {
-          description: 'Compra não encontrada',
-        },
+        200: { description: 'Compra cancelada', content: { 'application/json': { schema: { $ref: '#/components/schemas/CompraCartao' } } } },
+        ...authErrorResponses,
+        404: errorResponse,
       },
     },
   },
   '/faturas': {
     post: {
-      summary: 'Criar fatura',
+      summary: 'Criar ou obter fatura',
       tags: ['Faturas'],
       requestBody: {
         required: true,
@@ -1103,100 +717,41 @@ export const swaggerPaths = {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['cartao_id', 'mes', 'ano'],
+              required: ['cartao_id', 'conta_id'],
               properties: {
-                cartao_id: {
-                  type: 'integer',
-                  example: 1,
-                },
-                mes: {
-                  type: 'integer',
-                  example: 3,
-                },
-                ano: {
-                  type: 'integer',
-                  example: 2026,
-                },
+                cartao_id: { type: 'integer', example: 1 },
+                conta_id: { type: 'integer', example: 1 },
+                data_compra: { type: 'string', format: 'date-time', example: '2026-09-12T10:00:00.000Z' },
               },
             },
           },
         },
       },
       responses: {
-        '201': {
-          description: 'Fatura criada com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Fatura',
-              },
-            },
-          },
-        },
+        201: { description: 'Fatura criada ou encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Fatura' } } } },
+        400: errorResponse,
       },
     },
   },
   '/faturas/cartao/{cartao_id}': {
     get: {
-      summary: 'Listar faturas por cartão',
+      summary: 'Listar faturas por cartao',
       tags: ['Faturas'],
-      parameters: [
-        {
-          name: 'cartao_id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do cartão',
-        },
-      ],
+      parameters: [{ name: 'cartao_id', in: 'path', required: true, schema: { type: 'integer' } }],
       responses: {
-        '200': {
-          description: 'Lista de faturas do cartão',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'array',
-                items: {
-                  $ref: '#/components/schemas/Fatura',
-                },
-              },
-            },
-          },
-        },
+        200: { description: 'Lista de faturas', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Fatura' } } } } },
+        400: errorResponse,
       },
     },
   },
   '/faturas/{id}': {
     get: {
-      summary: 'Buscar fatura por ID',
+      summary: 'Buscar fatura por id_fatura',
       tags: ['Faturas'],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID da fatura',
-        },
-      ],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
       responses: {
-        '200': {
-          description: 'Dados da fatura',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Fatura',
-              },
-            },
-          },
-        },
-        '404': {
-          description: 'Fatura não encontrada',
-        },
+        200: { description: 'Fatura encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Fatura' } } } },
+        404: errorResponse,
       },
     },
   },
@@ -1204,31 +759,10 @@ export const swaggerPaths = {
     patch: {
       summary: 'Fechar fatura',
       tags: ['Faturas'],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID da fatura',
-        },
-      ],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
       responses: {
-        '200': {
-          description: 'Fatura fechada com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                $ref: '#/components/schemas/Fatura',
-              },
-            },
-          },
-        },
-        '404': {
-          description: 'Fatura não encontrada',
-        },
+        200: { description: 'Fatura fechada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Fatura' } } } },
+        400: errorResponse,
       },
     },
   },
@@ -1236,31 +770,24 @@ export const swaggerPaths = {
     patch: {
       summary: 'Pagar fatura',
       tags: ['Faturas'],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID da fatura',
-        },
-      ],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
       responses: {
-        '200': {
-          description: 'Fatura paga com sucesso',
+        200: {
+          description: 'Fatura paga',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/Fatura',
+                type: 'object',
+                properties: {
+                  mensagem: { type: 'string' },
+                  valor_pago: { type: 'number' },
+                  fatura: { $ref: '#/components/schemas/Fatura' },
+                },
               },
             },
           },
         },
-        '404': {
-          description: 'Fatura não encontrada',
-        },
+        400: errorResponse,
       },
     },
   },
@@ -1275,62 +802,44 @@ export const swaggerPaths = {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['tipo_chave', 'chave'],
+              required: ['chave', 'tipo_chave'],
               properties: {
-                tipo_chave: {
-                  type: 'string',
-                  enum: ['CPF', 'EMAIL', 'TELEFONE', 'ALEATORIA'],
-                  example: 'CPF',
-                },
-                chave: {
-                  type: 'string',
-                  example: '12345678900',
-                },
+                chave: { type: 'string', example: 'joao@example.com' },
+                tipo_chave: { type: 'string', enum: ['CPF', 'EMAIL', 'TELEFONE', 'ALEATORIA'], example: 'EMAIL' },
               },
             },
           },
         },
       },
       responses: {
-        '201': {
-          description: 'Chave PIX cadastrada com sucesso',
+        201: {
+          description: 'Chave PIX cadastrada',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ChavePix',
+                type: 'object',
+                properties: {
+                  message: { type: 'string' },
+                  chave: { $ref: '#/components/schemas/ChavePix' },
+                },
               },
             },
           },
         },
-        '400': {
-          description: 'Chave inválida',
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
+        ...authErrorResponses,
+        400: errorResponse,
+        404: errorResponse,
+        500: errorResponse,
       },
     },
     get: {
-      summary: 'Listar minhas chaves PIX',
+      summary: 'Listar chaves PIX do usuario autenticado',
       tags: ['Chaves PIX'],
       security: [{ BearerAuth: [] }],
       responses: {
-        '200': {
-          description: 'Lista de chaves PIX do usuário',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'array',
-                items: {
-                  $ref: '#/components/schemas/ChavePix',
-                },
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
+        200: { description: 'Lista de chaves PIX', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/ChavePix' } } } } },
+        ...authErrorResponses,
+        500: errorResponse,
       },
     },
   },
@@ -1339,81 +848,47 @@ export const swaggerPaths = {
       summary: 'Excluir chave PIX',
       tags: ['Chaves PIX'],
       security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'chave',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'A chave PIX',
-        },
-      ],
+      parameters: [{ name: 'chave', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
-        '200': {
-          description: 'Chave PIX excluída com sucesso',
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-        '404': {
-          description: 'Chave PIX não encontrada',
-        },
+        200: { description: 'Chave excluida', content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' } } } } } },
+        ...authErrorResponses,
+        404: errorResponse,
+        500: errorResponse,
       },
     },
   },
   '/chaves-pix/consultar/{chave}': {
     get: {
-      summary: 'Consultar origem da chave PIX',
+      summary: 'Consultar dados publicos de uma chave PIX',
       tags: ['Chaves PIX'],
       security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'chave',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'A chave PIX a consultar',
-        },
-      ],
+      parameters: [{ name: 'chave', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
-        '200': {
-          description: 'Origem da chave PIX',
+        200: {
+          description: 'Dados da chave PIX',
           content: {
             'application/json': {
               schema: {
                 type: 'object',
                 properties: {
-                  usuario_id: {
-                    type: 'string',
-                  },
-                  tipo_chave: {
-                    type: 'string',
-                  },
-                  chave: {
-                    type: 'string',
-                  },
+                  chave: { type: 'string' },
+                  numero_conta_destino: { type: 'string' },
+                  nome_recebedor: { type: 'string' },
                 },
               },
             },
           },
         },
-        '401': {
-          description: 'Não autenticado',
-        },
-        '404': {
-          description: 'Chave PIX não encontrada',
-        },
+        ...authErrorResponses,
+        404: errorResponse,
+        500: errorResponse,
       },
     },
   },
   '/cobrancas': {
     post: {
-      summary: 'Criar cobrança',
-      tags: ['Cobranças'],
+      summary: 'Criar cobranca PIX',
+      tags: ['Cobrancas'],
       security: [{ BearerAuth: [] }],
       requestBody: {
         required: true,
@@ -1421,108 +896,43 @@ export const swaggerPaths = {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['valor', 'descricao', 'vencimento'],
+              required: ['valor', 'codigo_pix', 'tipo'],
               properties: {
-                valor: {
-                  type: 'number',
-                  example: 200.00,
-                },
-                descricao: {
-                  type: 'string',
-                  example: 'Cobrança de serviço',
-                },
-                vencimento: {
-                  type: 'string',
-                  format: 'date',
-                  example: '2025-12-31',
-                },
+                valor: { type: 'number', example: 200 },
+                codigo_pix: { type: 'string', example: 'PIX-COB-123456' },
+                tipo: { type: 'string', example: 'PIX' },
               },
             },
           },
         },
       },
       responses: {
-        '201': {
-          description: 'Cobrança criada com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  valor: { type: 'number' },
-                  descricao: { type: 'string' },
-                  vencimento: { type: 'string' },
-                  status: { type: 'string' },
-                  codigo_cobranca: { type: 'string' },
-                },
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
+        201: { description: 'Cobranca criada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Cobranca' } } } },
+        ...authErrorResponses,
+        500: errorResponse,
       },
     },
     get: {
-      summary: 'Listar minhas cobranças',
-      tags: ['Cobranças'],
+      summary: 'Listar cobrancas do usuario autenticado',
+      tags: ['Cobrancas'],
       security: [{ BearerAuth: [] }],
       responses: {
-        '200': {
-          description: 'Lista de cobranças do usuário',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'string' },
-                    valor: { type: 'number' },
-                    descricao: { type: 'string' },
-                    vencimento: { type: 'string' },
-                    status: { type: 'string' },
-                    codigo_cobranca: { type: 'string' },
-                  },
-                },
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
+        200: { description: 'Lista de cobrancas', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Cobranca' } } } } },
+        ...authErrorResponses,
+        500: errorResponse,
       },
     },
   },
   '/cobrancas/{id}': {
     delete: {
-      summary: 'Deletar cobrança',
-      tags: ['Cobranças'],
+      summary: 'Deletar cobranca por _id',
+      tags: ['Cobrancas'],
       security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID da cobrança',
-        },
-      ],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
-        '200': {
-          description: 'Cobrança deletada com sucesso',
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-        '404': {
-          description: 'Cobrança não encontrada',
-        },
+        200: { description: 'Cobranca deletada', content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' } } } } } },
+        ...authErrorResponses,
+        500: errorResponse,
       },
     },
   },
@@ -1537,95 +947,38 @@ export const swaggerPaths = {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['valor', 'vencimento', 'descricao'],
+              required: ['valor', 'vencimento'],
               properties: {
-                valor: {
-                  type: 'number',
-                  example: 150.00,
-                },
-                vencimento: {
-                  type: 'string',
-                  format: 'date',
-                  example: '2025-12-31',
-                },
-                descricao: {
-                  type: 'string',
-                  example: 'Pagamento de conta',
-                },
+                valor: { type: 'number', example: 150 },
+                vencimento: { type: 'string', format: 'date', example: '2026-12-31' },
               },
             },
           },
         },
       },
       responses: {
-        '201': {
-          description: 'Boleto gerado com sucesso',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  id: {
-                    type: 'string',
-                  },
-                  codigo_barras: {
-                    type: 'string',
-                  },
-                  valor: {
-                    type: 'number',
-                  },
-                  vencimento: {
-                    type: 'string',
-                  },
-                  status: {
-                    type: 'string',
-                  },
-                },
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
+        201: { description: 'Boleto gerado', content: { 'application/json': { schema: { $ref: '#/components/schemas/Boleto' } } } },
+        ...authErrorResponses,
+        404: errorResponse,
+        500: errorResponse,
       },
     },
   },
   '/boletos/pendentes': {
     get: {
-      summary: 'Listar boletos pendentes',
+      summary: 'Listar boletos pendentes do usuario autenticado',
       tags: ['Boletos'],
       security: [{ BearerAuth: [] }],
       responses: {
-        '200': {
-          description: 'Lista de boletos pendentes',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'string' },
-                    valor: { type: 'number' },
-                    vencimento: { type: 'string' },
-                    descricao: { type: 'string' },
-                    status: { type: 'string' },
-                  },
-                },
-              },
-            },
-          },
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
+        200: { description: 'Lista de boletos pendentes', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Boleto' } } } } },
+        ...authErrorResponses,
+        500: errorResponse,
       },
     },
   },
   '/boletos/pagar': {
     post: {
-      summary: 'Pagar boleto',
+      summary: 'Pagar boleto por linha digitavel ou codigo de barras',
       tags: ['Boletos'],
       security: [{ BearerAuth: [] }],
       requestBody: {
@@ -1634,56 +987,32 @@ export const swaggerPaths = {
           'application/json': {
             schema: {
               type: 'object',
-              required: ['boleto_id'],
+              required: ['codigo'],
               properties: {
-                boleto_id: {
-                  type: 'string',
-                  example: 'boleto123',
-                },
+                codigo: { type: 'string', example: '34191.09008 63391.234567 89101.12345 1 00000000012345' },
               },
             },
           },
         },
       },
       responses: {
-        '200': {
-          description: 'Boleto pago com sucesso',
-        },
-        '400': {
-          description: 'Boleto inválido ou já pago',
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
+        200: { description: 'Boleto pago', content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' } } } } } },
+        ...authErrorResponses,
+        400: errorResponse,
       },
     },
   },
   '/boletos/{id}': {
     delete: {
-      summary: 'Cancelar boleto',
+      summary: 'Cancelar boleto por _id',
       tags: ['Boletos'],
       security: [{ BearerAuth: [] }],
-      parameters: [
-        {
-          name: 'id',
-          in: 'path',
-          required: true,
-          schema: {
-            type: 'string',
-          },
-          description: 'ID do boleto',
-        },
-      ],
+      parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
-        '200': {
-          description: 'Boleto cancelado com sucesso',
-        },
-        '401': {
-          description: 'Não autenticado',
-        },
-        '404': {
-          description: 'Boleto não encontrado',
-        },
+        200: { description: 'Boleto cancelado', content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' } } } } } },
+        ...authErrorResponses,
+        404: errorResponse,
+        500: errorResponse,
       },
     },
   },

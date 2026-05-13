@@ -18,6 +18,19 @@ const authErrorResponses = {
   },
 };
 
+const faturaErrorResponse = {
+  description: 'Erro na requisicao',
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/FaturaError' },
+    },
+  },
+};
+
+const expressDefaultErrorResponse = {
+  description: 'Erro encaminhado ao manipulador padrao do Express',
+};
+
 export const swaggerPaths = {
   '/usuarios': {
     post: {
@@ -278,8 +291,7 @@ export const swaggerPaths = {
               type: 'object',
               required: ['senha'],
               properties: {
-                login: { type: 'string', description: 'Email ou CPF do usuario', example: 'joao@example.com' },
-                email: { type: 'string', format: 'email', description: 'Alternativa ao campo login', example: 'joao@example.com' },
+                email: { type: 'string', format: 'email', example: 'joao@example.com' },
                 senha: { type: 'string', format: 'password', example: 'senha123' },
               },
             },
@@ -668,7 +680,7 @@ export const swaggerPaths = {
       responses: {
         201: { description: 'Compra realizada', content: { 'application/json': { schema: { $ref: '#/components/schemas/CompraCartao' } } } },
         ...authErrorResponses,
-        400: errorResponse,
+        500: expressDefaultErrorResponse,
       },
     },
     get: {
@@ -678,6 +690,7 @@ export const swaggerPaths = {
       responses: {
         200: { description: 'Lista de compras', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/CompraCartao' } } } } },
         ...authErrorResponses,
+        500: expressDefaultErrorResponse,
       },
     },
   },
@@ -690,7 +703,7 @@ export const swaggerPaths = {
       responses: {
         200: { description: 'Compra encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/CompraCartao' } } } },
         ...authErrorResponses,
-        404: errorResponse,
+        500: expressDefaultErrorResponse,
       },
     },
   },
@@ -703,7 +716,7 @@ export const swaggerPaths = {
       responses: {
         200: { description: 'Compra cancelada', content: { 'application/json': { schema: { $ref: '#/components/schemas/CompraCartao' } } } },
         ...authErrorResponses,
-        404: errorResponse,
+        500: expressDefaultErrorResponse,
       },
     },
   },
@@ -729,7 +742,7 @@ export const swaggerPaths = {
       },
       responses: {
         201: { description: 'Fatura criada ou encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Fatura' } } } },
-        400: errorResponse,
+        400: faturaErrorResponse,
       },
     },
   },
@@ -740,7 +753,7 @@ export const swaggerPaths = {
       parameters: [{ name: 'cartao_id', in: 'path', required: true, schema: { type: 'integer' } }],
       responses: {
         200: { description: 'Lista de faturas', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/Fatura' } } } } },
-        400: errorResponse,
+        400: faturaErrorResponse,
       },
     },
   },
@@ -751,7 +764,7 @@ export const swaggerPaths = {
       parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
       responses: {
         200: { description: 'Fatura encontrada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Fatura' } } } },
-        404: errorResponse,
+        404: faturaErrorResponse,
       },
     },
   },
@@ -762,7 +775,7 @@ export const swaggerPaths = {
       parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
       responses: {
         200: { description: 'Fatura fechada', content: { 'application/json': { schema: { $ref: '#/components/schemas/Fatura' } } } },
-        400: errorResponse,
+        400: faturaErrorResponse,
       },
     },
   },
@@ -787,7 +800,7 @@ export const swaggerPaths = {
             },
           },
         },
-        400: errorResponse,
+        400: faturaErrorResponse,
       },
     },
   },

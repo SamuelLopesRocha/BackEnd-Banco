@@ -90,7 +90,7 @@ const options = {
             _id: { type: 'string', example: '6507e8c9a1b234567890abcf' },
             id_cartao: { type: 'integer', example: 1 },
             usuario_id: { type: 'integer', example: 1 },
-            conta_id: { type: 'number', example: 123456 },
+            conta_id: { type: 'integer', example: 1 },
             numero_cartao: { type: 'string', example: '4532123456789012' },
             validade: { type: 'string', example: '05/31' },
             cvv: { type: 'string', example: '123' },
